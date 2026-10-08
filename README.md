@@ -1,0 +1,143 @@
+# Agent Xray
+
+How does an AI agent really work? This is the X-ray. Click a part. See inside. Learn what it does. Find the tools.
+
+**Try it:** https://mfahadakbar.github.io/agent-xray/
+
+The idea is simple. Show an agent as one big picture, like a body with parts. Click a part and you go deeper. Keep clicking and you learn step by step.
+
+![The start page: how does an AI agent really work?](docs/meet-ray.jpg)
+
+## Open it
+
+**Online:** https://mfahadakbar.github.io/agent-xray/
+
+**No install:** download `dist/index.html` and double-click it. It is one self-contained file. No server, no internet needed.
+
+**To work on it:**
+
+```bash
+npm install
+npm run dev        # http://localhost:5177
+npm run build      # rebuilds dist/index.html
+```
+
+## What you get
+
+**It is about agents, and Ray is the example.** The start page asks the question: how does an AI agent really work? Ray is a robot, and Ray is an AI agent. What is inside Ray is inside every agent. Move your mouse over Ray to peek, then turn on the X-ray. Ray has ten parts, and every part of an agent lives in one of them.
+
+![Ray, X-rayed, with its ten parts](docs/home-xray.jpg)
+
+The X-ray switch at the top right turns it off again and takes you back to the start page. So does `Esc`, and so does the logo.
+
+| Part | What builders call it | Inside |
+| --- | --- | --- |
+| Brain | The model | Which model, instructions, messages and chat templates, context engineering, reasoning and reflection, fine-tuning |
+| Heart | The agent loop | One run from start to finish, stop rules, retries, planning, kinds of agents, frameworks, low-code builders |
+| Senses | Input and output | Images and sound, structured output, streaming, generated media |
+| Memory | Memory and knowledge | Chat history, knowledge (RAG, knowledge graphs, corrective RAG), user memory, session state, learning, storage |
+| Hands | Tools | Function calling, ready-made tools, code agents, custom tools, MCP, skills |
+| Shield | Safety and control | Guardrails, hooks, human in the loop, permissions, threats, trust, signed receipts |
+| Steps | Workflows | Sequence, parallel, condition, loop, router, workflow engines |
+| Friends | Teams | Route, coordinate, broadcast, tasks, hand-off, group chat, agent protocols |
+| Check-up | Evals and observability | Evals, tracing, metrics, online tests, benchmarks, cost control, first aid |
+| Home | Runtime | Serving, interfaces, generative UI, schedules, background jobs, scaling, security, hosting |
+
+**Watch a message travel.** Ask Ray a question on the home screen and follow the message through its body, part by part. Every stop leaves its number on Ray, so you can read the whole journey afterwards. Then switch Memory, Hands or the Shield off and ask again. What breaks tells you what the part is for.
+
+![A message travelling through Ray](docs/playground.jpg)
+
+**Give Ray a job.** Pick the kind of agent you want (a researcher, a support desk, a data analyst, a coding buddy, a voice helper…) and watch that job travel through Ray the same way a message does: one numbered stop after another, with a card at each part that says what happens there. The parts the job does not use go dim, and links take you straight into the ones it does.
+
+![A data analyst's job, travelling through Ray](docs/jobs.jpg)
+
+**Go deeper.** Click a part and you are inside it. Click again and you go further. The path from the idea works exactly as written:
+
+**Ray → Memory → Knowledge → Vector database → Tools**
+
+**Play, do not read.** Almost every box has something to play with: 58 small scenes, each built so a five-year-old could follow it. Guess the next word with the brain. Pack the context backpack until it overflows. Drag your question across the map of meaning. Send a trick message at the shield. Snap blocks together into a working agent. Pull the plug on Ray and see what storage saves.
+
+![The vector database scene](docs/vector-database.jpg)
+
+**You are here.** Some boxes are one stop on a longer trip. The rooms about documents (reading a file, cutting it into chunks, turning it into numbers, searching, reranking) all show the whole trip from book to answer, with the step you are on.
+
+**Every step has a number.** Wherever something happens in an order, each stop carries a numbered tag: 1, 2, 3. Things that happen together share a number and get a letter: 2a, 2b, 2c. The caption shows the number of the step you are watching, and the tags stay on the picture, so the order can still be read when the animation is over.
+
+![Step numbers on a team: the leader asks, three friends answer together, the leader picks](docs/steps.jpg)
+
+**The same questions at every level,** as the idea asks:
+
+- What is it? In simple words, or in builder words (one switch).
+- Why it matters.
+- What to keep in mind when you build it.
+- What is possible today. What is not possible yet.
+- Real tools, marked open source, free, free tier or paid, with the popular ones starred.
+
+**Builders without code are covered too.** Heart → Build with blocks lists the low-code tools (n8n, Langflow, Flowise, Dify, Zapier Agents, Copilot Studio and more) and lets you build a small agent by snapping blocks together.
+
+![Build with blocks](docs/low-code.jpg)
+
+**Extras**
+
+- **Whole map** (press `/`): all 135 boxes on one screen, with search across parts and tools.
+- **Progress**: the map remembers which boxes you opened.
+- `Esc` goes up one level. Every page has its own address, so you can share a link to any box.
+
+## Where the knowledge comes from
+
+The map is general. It explains how agents work, not how one library works. Its shape and content were built from four sources:
+
+| Source | What it gave the map |
+| --- | --- |
+| [Agno documentation](https://docs.agno.com/examples/introduction) | The backbone: agents, teams, workflows, memory, knowledge, hooks, guardrails, human in the loop, evals, runtime |
+| [Microsoft: AI Agents for Beginners](https://github.com/microsoft/ai-agents-for-beginners) | Kinds of agents, design principles (transparency, control), threats, planning, metacognition, context failures, memory types, cost control, scaling, protocols, signed receipts |
+| [Hugging Face Agents Course](https://huggingface.co/learn/agents-course/unit0/introduction) | Messages and chat templates, the think-act-observe cycle, code agents, fine-tuning for function calling, the GAIA benchmark, online evaluation |
+| [awesome-llm-apps](https://github.com/Shubhamsaboo/awesome-llm-apps) | The jobs on the home screen, RAG variants (corrective, graph, multimodal, as a service), memory apps, voice agents, generative UI, token optimisation |
+
+Agno appears only as one framework in the tool lists, next to the others.
+
+Tool lists are a snapshot from October 2026: 327 tools, 273 links, all checked. Plans and prices change, so check a tool's own page before you choose.
+
+## How it is built
+
+React, TypeScript and Vite. No backend. The build is a single HTML file with scripts, styles and fonts inlined.
+
+```
+src/
+  data/       the knowledge: one file per part of Ray. Edit these to change the map.
+  ray/        Ray: the robot drawing, the X-ray layer, the wiring between parts
+  views/      home screen, a room (one opened box), tool shelf, whole map, the journeys (flow.ts, jobs.ts)
+  scenes/     the interactive scenes, one file per branch, built from scenes/kit.tsx
+  lib/        routing, the X-ray switch, progress, small hooks
+scripts/
+  shoot.mjs   screenshot one page
+  tour.mjs    visit every page and fail on any error
+```
+
+**Add a box.** Add a node to the right file in `src/data/`. Every node answers the same questions (`simple`, `builder`, `why`, `mind`, `today`, `notYet`) and may list `tools` and `children`.
+
+**Add a job.** A job is a story in `src/views/jobs.ts`: a task, and a list of stops (`to` a part, a caption, and the card that part shows). The home screen plays it with the same engine as the message journey.
+
+**Add a trip.** `src/data/trips.ts` lists the boxes of a longer trip in order. Every room on the list shows the route and where you are.
+
+**Add a scene.** Write a component with the pieces in `src/scenes/kit.tsx`, `register()` it under a name, and put that name in the node's `scene` field. A scene is a 16:9 stage measured in percent, so it looks the same at any size. `name:variant` opens a scene in a given state.
+
+**Number the steps.** If a scene shows a process, tag it. Pass `step` to `<Scene>` to show the current step in the caption, and put a `<StepTag n={2} />` on each thing that takes a turn (`corner` pins it to a card, `now` lights the current one, `todo` dims the ones still to come). For actors that take several turns, `tagsFor()` and `<StepTags>` work the numbers out, and `stepName(2, i, size)` gives `2a`, `2b` for things that happen together.
+
+**Check your work.** With `npm run dev` running:
+
+```bash
+node scripts/tour.mjs      # all 135 pages, no console errors
+```
+
+**Put it online.** The website is the `gh-pages` branch, and that branch is just the `dist` folder. After a change: build, commit, push, then
+
+```bash
+npm run deploy             # sends dist/ to the gh-pages branch
+```
+
+## Good to know
+
+- Made for a modern desktop browser. It works on phones too. Scenes are easier to see with the phone turned sideways.
+- It respects the "reduce motion" setting.
+- Nothing is sent anywhere. Progress is kept in the browser only.
