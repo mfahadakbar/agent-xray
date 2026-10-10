@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type PointerEvent } from 'react';
 import { useRunner, useSteps } from '../lib/hooks';
-import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, Pic, Scene, Slider, StepNav, StepTag, Tag, Toggle, Typed, stepName, type Mood } from './kit';
+import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, PH, Pic, SH, Scene, Slider, StepNav, StepTag, Tag, Toggle, Typed, stepName, usePortrait, type Mood } from './kit';
 import { register, type SceneProps } from './registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,20 +57,20 @@ function Library() {
       }
     >
       <Draw>
-        <Arrow from={[30, 30]} to={[54, 24]} bend={-3} flow={on && s.i === 1} off={!(on && s.i === 1)} />
+        <Arrow from={[30, 30]} to={[54, 24]} bend={-3} p={{ from: [27, 80], to: [38, 65] }} flow={on && s.i === 1} off={!(on && s.i === 1)} />
       </Draw>
 
-      <At x={28} y={6.500} w={42}>
+      <At x={28} y={6.500} w={42} p={{ x: 50, y: 7, w: 80 }}>
         <Bubble who="you">
           <StepTag n={1} corner now={s.i === 0} />
           How tall is a giraffe?
         </Bubble>
       </At>
-      <At x={20} y={31}>
+      <At x={20} y={31} p={{ x: 22, y: 93 }}>
         <MiniRay mood={mood} size={5.600} />
       </At>
 
-      <At x={75.500} y={6.500}>
+      <At x={75.500} y={6.500} p={{ x: 50, y: 21 }}>
         <span className="k-small">
           {s.i >= 1 && <StepTag n={2} now={s.i === 1} />} {on ? "Ray's library" : 'no library'}
         </span>
@@ -78,9 +78,12 @@ function Library() {
       {PAGES.map((p, i) => {
         const hit = p.id === 'giraffe';
         const taken = on && hit && s.i >= 2;
-        const at = taken ? { x: 38, y: 30 } : slot(i);
+        // On the tall (phone) stage the shelf is a 3 × 2 grid above Ray.
+        const at = taken
+          ? { x: 38, y: 30, p: { x: 54, y: 91, w: 22 } }
+          : { ...slot(i), p: { x: 24 + (i % 3) * 26, y: 35 + Math.floor(i / 3) * 21, w: 22 } };
         return (
-          <At key={p.id} x={at.x} y={at.y} w={12} z={taken ? 4 : 1} style={{ opacity: on ? 1 : 0.14 }} slow>
+          <At key={p.id} x={at.x} y={at.y} w={12} p={at.p} z={taken ? 4 : 1} style={{ opacity: on ? 1 : 0.14 }} slow>
             <div className={`lb-page${on && s.i === 1 ? ' is-scanned' : ''}${taken ? ' is-hit' : ''}`} style={{ '--i': i } as CSSProperties}>
               {taken && <StepTag n={3} corner now={s.i === 2} />}
               <Pic size={1.900}>{p.icon}</Pic>
@@ -90,7 +93,7 @@ function Library() {
         );
       })}
 
-      <At x={36} y={48} w={56} hide={s.i < 3}>
+      <At x={36} y={48} w={56} p={{ x: 50, y: 119, w: 90 }} hide={s.i < 3}>
         <Bubble who="ray" tone={on ? 'ok' : 'bad'} key={`${on}`}>
           <StepTag n={4} corner now />
           {on ? (
@@ -139,16 +142,16 @@ function Readers() {
       step={file ? 3 : busy ? 2 : 1}
     >
       <Draw>
-        <Arrow from={[27, 29]} to={[39, 29]} flow={busy} off={!busy} />
-        <Arrow from={[55, 29]} to={[63, 29]} flow={busy} off={!file && !busy} />
+        <Arrow from={[27, 29]} to={[39, 29]} p={{ from: [50, 34], to: [50, 40] }} flow={busy} off={!busy} />
+        <Arrow from={[55, 29]} to={[63, 29]} p={{ from: [50, 63], to: [50, 72] }} flow={busy} off={!file && !busy} />
       </Draw>
-      <At x={14} y={5.500}>
+      <At x={14} y={5.500} p={{ x: 50, y: 5 }}>
         <span className="k-label">
           <StepTag n={1} now={!busy && !file} /> Pick a file
         </span>
       </At>
       {FILES.map((f, i) => (
-        <At key={f.id} x={14} y={14.500 + i * 10.300} w={24}>
+        <At key={f.id} x={14} y={14.500 + i * 10.300} w={24} p={{ x: i % 2 ? 73.500 : 26.500, y: 15 + Math.floor(i / 2) * 11.500, w: 45 }}>
           <button className={`ee-thing${kind === f.id || work === f.id ? ' is-on' : ''}`} onClick={() => read(f.id)} disabled={busy}>
             <Pic size={1.800}>{f.icon}</Pic>
             <b>{f.name}</b>
@@ -156,7 +159,7 @@ function Readers() {
         </At>
       ))}
 
-      <At x={47} y={29} w={15}>
+      <At x={47} y={29} w={15} p={{ x: 50, y: 51.500, w: 32 }}>
         <Card className="k-center" tone={busy ? 'info' : undefined}>
           <StepTag n={2} corner now={busy} todo={!busy && !file} />
           <span className={busy ? 'k-spin' : ''} style={{ display: 'inline-block' }}>
@@ -166,7 +169,7 @@ function Readers() {
         </Card>
       </At>
 
-      <At x={81} y={29} w={33}>
+      <At x={81} y={29} w={33} p={{ x: 50, y: 94, w: 86 }}>
         <Card className="rd-out" tone={file ? 'ok' : undefined}>
           <StepTag n={3} corner now={!!file} todo={!file} />
           <small>plain words</small>
@@ -214,7 +217,9 @@ function Chunking() {
   const [cut, setCut] = useState<Cut>('size');
   const [size, setSize] = useState(4);
   const chunks = chunksFor(cut, size);
-  const rowY = (i: number) => 6 + i * 5.300;
+  // On the tall (phone) stage the nine lines take the full width, and the question goes under them.
+  const tall = usePortrait();
+  const rowY = (i: number) => (tall ? 8 + i * 9.300 : 6 + i * 5.300);
   const mixed = (c: number[]) => new Set(c.map((i) => LINES[i].topic)).size > 1;
   const nMixed = chunks.filter(mixed).length;
   // The bite that holds the answer to "How tall is a giraffe?" is the one with line 1.
@@ -253,15 +258,15 @@ function Chunking() {
         const bottom = rowY(c[c.length - 1]);
         const bad = mixed(c);
         return (
-          <At key={`${cut}${size}${k}`} x={33} y={(top + bottom) / 2} w={58} z={0}>
-            <div className={`ck-bite${bad ? ' is-mixed' : ''}${c === answerChunk ? ' is-answer' : ''}`} style={{ height: `${bottom - top + 4.900}cqw` }}>
+          <At key={`${cut}${size}${k}`} x={33} y={(top + bottom) / 2} w={58} p={{ x: 50, y: (top + bottom) / 2, w: 96 }} z={0}>
+            <div className={`ck-bite${bad ? ' is-mixed' : ''}${c === answerChunk ? ' is-answer' : ''}`} style={{ height: `${bottom - top + (tall ? 8.500 : 4.900)}cqw` }}>
               <span>{bad ? '✕ mixed' : '✓ one topic'}</span>
             </div>
           </At>
         );
       })}
       {LINES.map((l, i) => (
-        <At key={i} x={28} y={rowY(i)} w={44} z={1}>
+        <At key={i} x={28} y={rowY(i)} w={44} p={{ x: 43, y: rowY(i), w: 78 }} z={1}>
           <div className="ck-line" style={{ '--c': TOPIC_COLOR[l.topic] } as CSSProperties}>
             {l.para && <i>¶</i>}
             {l.text}
@@ -269,16 +274,16 @@ function Chunking() {
         </At>
       ))}
 
-      <At x={81} y={8} w={32}>
+      <At x={81} y={8} w={32} p={{ x: 35, y: 96, w: 62 }}>
         <Bubble who="you">How tall is a giraffe?</Bubble>
       </At>
-      <At x={81} y={27} w={32}>
+      <At x={81} y={27} w={32} p={{ x: 40, y: 116, w: 72 }}>
         <Card tone={noise ? 'warn' : 'ok'} key={`${cut}${size}`} className="k-pop">
           <small>the bite Ray grabs</small>
           {answerChunk.length} lines. {noise ? `${noise} of them ${noise === 1 ? 'is' : 'are'} about another animal.` : 'All about giraffes.'}
         </Card>
       </At>
-      <At x={81} y={44}>
+      <At x={81} y={44} p={{ x: 88, y: 108 }}>
         <MiniRay mood={noise ? 'think' : 'happy'} size={4.400} />
       </At>
     </Scene>
@@ -321,6 +326,9 @@ function Embeddings() {
 
   const w = NEW_WORDS.find((x) => x.word === cur);
   const landed = stage === 0 && !!w && placed.includes(w.word);
+  // On the tall (phone) stage the map sits under the machine. A dot keeps its place on the map.
+  const tall = usePortrait();
+  const onMap = (x: number, y: number) => ({ x: 6 + ((x - 58) / 39) * 88, y: 62 + ((y - 5) / 48) * 66 });
   const caption =
     stage === 1
       ? `The number machine reads “${cur}”…`
@@ -333,22 +341,22 @@ function Embeddings() {
   return (
     <Scene caption={caption} tone={stage === 0 && w ? 'ok' : undefined} step={stage === 1 ? 2 : stage === 2 ? 3 : landed ? 4 : 1}>
       <Draw>
-        <rect x="58" y="5" width="39" height="48" rx="2.500" fill="rgba(8,14,28,.55)" stroke="rgba(143,190,255,.22)" strokeWidth=".25" />
-        <Arrow from={[21, 29]} to={[30, 29]} flow={stage === 1} off={stage !== 1} />
-        <Arrow from={[45, 29]} to={[57, 29]} flow={stage === 2} off={stage !== 2} />
+        <rect x={tall ? 6 : 58} y={tall ? 62 : 5} width={tall ? 88 : 39} height={tall ? 66 : 48} rx="2.500" fill="rgba(8,14,28,.55)" stroke="rgba(143,190,255,.22)" strokeWidth=".25" />
+        <Arrow from={[21, 29]} to={[30, 29]} p={{ from: [50, 21.500], to: [50, 26.500] }} flow={stage === 1} off={stage !== 1} />
+        <Arrow from={[45, 29]} to={[57, 29]} p={{ from: [50, 55], to: [50, 60.500] }} flow={stage === 2} off={stage !== 2} />
       </Draw>
-      <At x={77.500} y={7.500}>
+      <At x={77.500} y={7.500} p={{ x: 50, y: 66 }}>
         <span className="k-small">
           <StepTag n={4} now={landed} todo={!landed} /> the map of meaning
         </span>
       </At>
-      <At x={11} y={5.500}>
+      <At x={11} y={5.500} p={{ x: 50, y: 5 }}>
         <span className="k-label">
           <StepTag n={1} now={stage === 0 && !landed} /> Pick a word
         </span>
       </At>
       {NEW_WORDS.map((nw, i) => (
-        <At key={nw.word} x={11} y={14.500 + i * 10} w={18}>
+        <At key={nw.word} x={11} y={14.500 + i * 10} w={18} p={{ x: 14 + i * 24, y: 15, w: 23 }}>
           <button className={`ee-thing${placed.includes(nw.word) ? ' is-on' : ''}`} onClick={() => embed(nw.word)} disabled={busy}>
             <Pic size={1.500}>{nw.icon}</Pic>
             <b>{nw.word}</b>
@@ -356,7 +364,7 @@ function Embeddings() {
         </At>
       ))}
 
-      <At x={37.500} y={29} w={15}>
+      <At x={37.500} y={29} w={15} p={{ x: 50, y: 36.500, w: 34 }}>
         <Card className="k-center" tone={stage ? 'info' : undefined}>
           <StepTag n={2} corner now={stage === 1} todo={stage === 0 && !landed} />
           <span className={stage === 1 ? 'k-spin' : ''} style={{ display: 'inline-block' }}>
@@ -365,14 +373,14 @@ function Embeddings() {
           <span className="k-label">number machine</span>
         </Card>
       </At>
-      <At x={37.500} y={44} hide={stage !== 2 || !w}>
+      <At x={37.500} y={44} p={{ x: 50, y: 51 }} hide={stage !== 2 || !w}>
         <Tag tone="info">
           <StepTag n={3} now /> <span className="k-mono">[{w?.nums.join(', ')}, …]</span>
         </Tag>
       </At>
 
       {ANCHORS.map((a) => (
-        <At key={a.word} x={a.x} y={a.y}>
+        <At key={a.word} x={a.x} y={a.y} p={onMap(a.x, a.y)}>
           <div className="vm-dot is-ghost">
             <Pic size={1.600}>{a.icon}</Pic>
             <span>{a.word}</span>
@@ -380,7 +388,7 @@ function Embeddings() {
         </At>
       ))}
       {NEW_WORDS.filter((nw) => placed.includes(nw.word)).map((nw) => (
-        <At key={nw.word} x={nw.x} y={nw.y}>
+        <At key={nw.word} x={nw.x} y={nw.y} p={onMap(nw.x, nw.y)}>
           <div className={`vm-dot k-pop${cur === nw.word ? ' is-hit' : ''}`}>
             <Pic size={1.600}>{nw.icon}</Pic>
             <span>{nw.word}</span>
@@ -432,10 +440,20 @@ function VectorMap() {
   const hit = new Set(top.map((d) => d.id));
   const reach = top[top.length - 1].dist + 2.200;
 
+  // On the tall (phone) stage the map is bigger and sits on top, with the list under it.
+  // It grows by the same amount in both directions, so what is closest still looks closest.
+  const tall = usePortrait();
+  const K = tall ? 90 / (MAP.x1 - MAP.x0) : 1;
+  const sx = (x: number) => (tall ? 5 : MAP.x0) + (x - MAP.x0) * K;
+  const sy = (y: number) => (tall ? 6 : MAP.y0) + (y - MAP.y0) * K;
+  // The frame around the map, in stage units. It is also the part of the stage that listens to a finger.
+  const frame = { x: sx(MAP.x0) - 2, y: sy(MAP.y0) - 2.500, w: (MAP.x1 - MAP.x0) * K + 4, h: (MAP.y1 - MAP.y0) * K + 5 };
+  const stageH = tall ? PH : SH;
+
   const place = (e: PointerEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.width) * 100;
+    const x = MAP.x0 + (frame.x + ((e.clientX - r.left) / r.width) * frame.w - sx(MAP.x0)) / K;
+    const y = MAP.y0 + (frame.y + ((e.clientY - r.top) / r.height) * frame.h - sy(MAP.y0)) / K;
     setPin({ x: Math.max(MAP.x0, Math.min(MAP.x1, x)), y: Math.max(MAP.y0, Math.min(MAP.y1, y)) });
     setAsk(null);
   };
@@ -460,15 +478,15 @@ function VectorMap() {
       }
     >
       <Draw>
-        <rect x={MAP.x0 - 2} y={MAP.y0 - 2.500} width={MAP.x1 - MAP.x0 + 4} height={MAP.y1 - MAP.y0 + 5} rx="2.500" fill="rgba(8,14,28,.5)" stroke="rgba(143,190,255,.2)" strokeWidth=".25" />
-        <circle className="vm-reach" cx={pin.x} cy={pin.y} r={reach} />
+        <rect x={frame.x} y={frame.y} width={frame.w} height={frame.h} rx="2.500" fill="rgba(8,14,28,.5)" stroke="rgba(143,190,255,.2)" strokeWidth=".25" />
+        <circle className="vm-reach" cx={sx(pin.x)} cy={sy(pin.y)} r={reach * K} />
         {top.map((d) => (
-          <line key={d.id} className="vm-link" x1={pin.x} y1={pin.y} x2={d.x} y2={d.y} />
+          <line key={d.id} className="vm-link" x1={sx(pin.x)} y1={sy(pin.y)} x2={sx(d.x)} y2={sy(d.y)} />
         ))}
       </Draw>
 
       {DOTS.map((d) => (
-        <At key={d.id} x={d.x} y={d.y} z={hit.has(d.id) ? 2 : 1}>
+        <At key={d.id} x={sx(d.x)} y={sy(d.y)} p={{ y: sy(d.y) }} z={hit.has(d.id) ? 2 : 1}>
           <div className={`vm-dot${hit.has(d.id) ? ' is-hit' : ''}`}>
             {hit.has(d.id) && <StepTag n={top.findIndex((t) => t.id === d.id) + 1} corner small now={top[0].id === d.id} />}
             <Pic size={1.600}>{d.icon}</Pic>
@@ -477,13 +495,15 @@ function VectorMap() {
         </At>
       ))}
 
-      <At x={pin.x} y={pin.y} z={3} className="is-snap">
+      {/* The magnifier does not take the pointer itself: grabbing it is grabbing the map underneath. */}
+      <At x={sx(pin.x)} y={sy(pin.y)} p={{ y: sy(pin.y) }} z={3} className="is-snap vm-pin-at">
         <span className="vm-pin">🔍</span>
       </At>
 
-      {/* the whole map listens: click anywhere, or drag */}
+      {/* the whole map listens: click anywhere, or drag. Outside the map the page still scrolls under a finger. */}
       <div
         className="vm-touch"
+        style={{ left: `${frame.x}%`, top: `${(frame.y / stageH) * 100}%`, width: `${frame.w}%`, height: `${(frame.h / stageH) * 100}%` }}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId);
           setDrag(true);
@@ -496,11 +516,11 @@ function VectorMap() {
         aria-label="The map of meaning. Click or drag to move your question."
       />
 
-      <At x={84.500} y={7}>
+      <At x={84.500} y={7} p={{ x: 50, y: 81 }}>
         <span className="k-small">Ray grabs</span>
       </At>
       {top.map((d, i) => (
-        <At key={d.id} x={84.500} y={14 + i * 7.400} w={25} z={4}>
+        <At key={d.id} x={84.500} y={14 + i * 7.400} w={25} p={{ x: 50, y: 88 + i * 8.600, w: 62 }} z={4}>
           <Card className="vm-row k-pop">
             <b>{i + 1}</b>
             <Pic size={1.300}>{d.icon}</Pic>
@@ -509,8 +529,8 @@ function VectorMap() {
           </Card>
         </At>
       ))}
-      <At x={36} y={54} z={4}>
-        <span className="k-small">click or drag anywhere on the map</span>
+      <At x={36} y={54} p={{ x: 50, y: 76.500 }} z={4}>
+        <span className="k-small">{tall ? 'tap or drag anywhere on the map' : 'click or drag anywhere on the map'}</span>
       </At>
     </Scene>
   );
@@ -596,7 +616,7 @@ function SearchModes({ variant }: SceneProps) {
         </>
       }
     >
-      <At x={32} y={5.500} w={40}>
+      <At x={32} y={5.500} w={40} p={{ x: 50, y: 6, w: 70 }}>
         <div className="sm-query">🔎 {QUERY[q].text}</div>
       </At>
       {DOCS.map((d) => {
@@ -604,7 +624,7 @@ function SearchModes({ variant }: SceneProps) {
         const sc = score(d);
         const found = sc > 0.2;
         return (
-          <At key={d.id} x={32} y={14 + rank * 6.700} w={54} z={6 - rank} style={{ opacity: found ? 1 : 0.22 }}>
+          <At key={d.id} x={32} y={14 + rank * 6.700} w={54} p={{ x: 50, y: 19 + rank * 11.400, w: 92 }} z={6 - rank} style={{ opacity: found ? 1 : 0.22 }}>
             <div className={`sm-doc${found && rank === 0 ? ' is-top' : ''}`}>
               <b>{found ? rank + 1 : '–'}</b>
               <span>{mark(d.title)}</span>
@@ -616,10 +636,10 @@ function SearchModes({ variant }: SceneProps) {
         );
       })}
 
-      <At x={82} y={38}>
+      <At x={82} y={38} p={{ x: 15, y: 106 }}>
         <MiniRay mood={v.tone === 'ok' ? 'happy' : v.tone === 'bad' ? 'oops' : 'think'} size={5} />
       </At>
-      <At x={81} y={18} w={31}>
+      <At x={81} y={18} w={31} p={{ x: 62, y: 105, w: 70 }}>
         <Bubble who="ray" tone={v.tone} key={`${q}${mode}`}>
           {v.text}
         </Bubble>
@@ -682,10 +702,10 @@ function Rerank() {
         )
       }
     >
-      <At x={33} y={5.500} w={46}>
+      <At x={33} y={5.500} w={46} p={{ x: 50, y: 7, w: 84 }}>
         <Bubble who="you">How long do giraffes sleep?</Bubble>
       </At>
-      <At x={33} y={22.500} w={58} z={0}>
+      <At x={33} y={22.500} w={58} p={{ x: 50, y: 30, w: 96 }} z={0}>
         <div className="rr-reads">
           <span>Ray reads these two</span>
         </div>
@@ -694,7 +714,7 @@ function Rerank() {
         const rank = order.indexOf(d);
         const scored = read >= d.id;
         return (
-          <At key={d.id} x={33} y={18.500 + rank * 7.600} w={54} z={2}>
+          <At key={d.id} x={33} y={18.500 + rank * 7.600} w={54} p={{ x: 50, y: 24 + rank * 12, w: 90 }} z={2}>
             <div className={`sm-doc rr-doc${read === d.id && busy ? ' is-reading' : ''}${sorted && rank === 0 ? ' is-top' : ''}`}>
               <b>{rank + 1}</b>
               <span>{d.title}</span>
@@ -704,10 +724,10 @@ function Rerank() {
         );
       })}
 
-      <At x={84} y={40}>
+      <At x={84} y={40} p={{ x: 15, y: 106 }}>
         <MiniRay mood={sorted ? 'happy' : busy ? 'think' : 'sad'} size={4.800} />
       </At>
-      <At x={82} y={20} w={30}>
+      <At x={82} y={20} w={30} p={{ x: 62, y: 105, w: 70 }}>
         <Bubble who="ray" tone={sorted ? 'ok' : 'warn'} key={`${sorted}`}>
           {sorted ? 'Only 30 minutes a day!' : 'I read the top two. They do not say.'}
         </Bubble>
@@ -773,19 +793,19 @@ function WhenToLook() {
     >
       <Draw>
         {r.trips.map((_, i) => (
-          <Arrow key={`${msg}${how}${i}`} from={[27, 27 + i * 9]} to={[69, 24 + i * 10]} bend={i ? 3 : -3} flow />
+          <Arrow key={`${msg}${how}${i}`} from={[27, 27 + i * 9]} to={[69, 24 + i * 10]} bend={i ? 3 : -3} p={{ from: [24, 55 + i * 10], to: [71, 53 + i * 13] }} flow />
         ))}
       </Draw>
-      <At x={38} y={6.500} w={56}>
+      <At x={38} y={6.500} w={56} p={{ x: 50, y: 8, w: 88 }}>
         <Bubble who="you" key={msg}>
           <StepTag n={1} corner />
           {text}
         </Bubble>
       </At>
-      <At x={17} y={31}>
+      <At x={17} y={31} p={{ x: 14, y: 60 }}>
         <MiniRay mood={r.tone === 'ok' ? 'happy' : 'think'} size={5.400} />
       </At>
-      <At x={82} y={29} w={24}>
+      <At x={82} y={29} w={24} p={{ x: 85.500, y: 60, w: 27 }}>
         <Card className="k-center">
           <Pic size={3.200}>📚</Pic>
           <span className="k-title">Library</span>
@@ -795,7 +815,7 @@ function WhenToLook() {
         </Card>
       </At>
       {r.trips.map((t, i) => (
-        <At key={`${msg}${how}${i}`} x={48} y={21.500 + i * 11.500} w={30} z={3}>
+        <At key={`${msg}${how}${i}`} x={48} y={21.500 + i * 11.500} w={30} p={{ x: 48, y: r.trips.length === 1 ? 58 : 44 + i * 28, w: 42 }} z={3}>
           <Card className="k-pop">
             <StepTag n={stepName(2, i, r.trips.length)} corner />
             <small>Ray searches for</small>
@@ -803,7 +823,7 @@ function WhenToLook() {
           </Card>
         </At>
       ))}
-      <At x={40} y={48.500} w={62}>
+      <At x={40} y={48.500} w={62} p={{ x: 50, y: 116, w: 90 }}>
         <Bubble who="ray" tone={r.tone} key={`${msg}${how}`}>
           <StepTag n={r.trips.length ? 3 : 2} corner now />
           <Typed text={r.say} />

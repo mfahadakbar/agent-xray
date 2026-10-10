@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react';
-import { useTyped, type Steps } from '../lib/hooks';
+import { createContext, useContext, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useMedia, useTyped, type Steps } from '../lib/hooks';
 
 /**
  * The scene kit. Every interactive explainer is built from these few pieces.
@@ -7,11 +7,41 @@ import { useTyped, type Steps } from '../lib/hooks';
  * A scene is a 16:9 stage. Positions are in "stage units": 1 unit = 1% of the stage width,
  * so the stage is 100 wide and 56.25 tall, on any screen. HTML pieces are placed with <At>,
  * lines and arrows are drawn in <Draw> using the same units.
+ *
+ * On a phone the stage stands up instead: still 100 units wide, but 3:4, so 133.33 tall, and the
+ * type is bigger. Nothing is cut and nothing has to be zoomed. Every piece keeps its place from left
+ * to right and gets more room from top to bottom: a `y` written for the wide stage is stretched to the
+ * tall one. Where that is not good enough, a piece says where it goes on the tall stage with `p`.
  */
 export const SW = 100;
 export const SH = 56.25;
+/** The height of the tall (phone) stage, in the same units. */
+export const PH = (SW * 4) / 3;
 
 export type P2 = readonly [number, number];
+
+interface Stage {
+  /** The stage is standing up (a phone held upright). */
+  portrait: boolean;
+  /** How tall the stage is, in stage units. */
+  h: number;
+  /** A height on the wide stage, times this, is the same height on this stage. */
+  ky: number;
+}
+const WIDE: Stage = { portrait: false, h: SH, ky: 1 };
+const TALL: Stage = { portrait: true, h: PH, ky: PH / SH };
+const StageCtx = createContext<Stage>(WIDE);
+/** Which way the stage stands. For the few things in a scene that cannot simply stretch. */
+export const useStage = () => useContext(StageCtx);
+/** Below this window width, the stage stands up. */
+export const PORTRAIT = '(max-width: 640px)';
+/** A phone on its side: the stage stays wide, but the screen is short, so the stage must fit its height. */
+const SHORT = '(max-height: 560px) and (orientation: landscape)';
+/**
+ * Is the stage standing up? For a scene's own code, which runs outside the stage:
+ * a scene with real geometry (a backpack that fills up, a clock) works out its own tall layout.
+ */
+export const usePortrait = () => useMedia(PORTRAIT);
 
 // ── frame ────────────────────────────────────────────────────────────────────
 
@@ -20,34 +50,92 @@ export function Scene({
   caption,
   controls,
   tone,
-  tall,
   step,
 }: {
   children: ReactNode;
-  /** One short sentence about what is happening right now. Read aloud when sound is on. */
+  /** One short sentence about what is happening right now. */
   caption: string;
   controls?: ReactNode;
   tone?: 'ok' | 'bad' | 'warn';
-  /** A taller stage (4:3) for scenes that need the room. */
-  tall?: boolean;
   /** Which step of the process the caption is about. Shown as the same numbered tag used on the stage. */
   step?: number;
 }) {
+  const portrait = useMedia(PORTRAIT);
+  const short = useMedia(SHORT) && !portrait;
+  // A small screen: the scene is fitted to it, and its bar is kept compact.
+  const snug = portrait || short;
+  const root = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
+
+  // On a phone the picture, its caption and its buttons should all be on the screen together.
+  // The bar under the stage is as tall as its words and buttons need, and the stage takes the rest.
+  useLayoutEffect(() => {
+    const box = root.current;
+    const el = bar.current;
+    if (!snug || !box || !el) return;
+    // The bar only ever asks for more room. If it gave room back with every shorter caption, the stage would jump.
+    let most = 0;
+    const fit = () => {
+      if (el.offsetHeight <= most) return;
+      most = el.offsetHeight;
+      box.style.setProperty('--bar-h', `${most}px`);
+    };
+    const again = () => {
+      most = 0;
+      fit();
+    };
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(el);
+    window.addEventListener('orientationchange', again);
+    return () => {
+      watch.disconnect();
+      window.removeEventListener('orientationchange', again);
+      box.style.removeProperty('--bar-h');
+    };
+  }, [snug, portrait]);
+
+  // Pressing a button under the stage brings the scene into view, so nothing plays off screen.
+  const intoView = () => {
+    const box = root.current;
+    if (!snug || !box) return;
+    const r = box.getBoundingClientRect();
+    const vh = window.innerHeight;
+    if (r.top >= -1 && r.bottom <= vh + 1) return; // all of it is on screen already
+    // A scene that fits is moved just far enough. One that is taller than the screen goes to the top:
+    // then the whole picture and its caption can be seen, and only the buttons need a small scroll.
+    const by = r.height > vh || r.top < 0 ? r.top : r.bottom - vh;
+    if (Math.abs(by) > 2) window.scrollBy({ top: by, behavior: 'smooth' });
+  };
+
   return (
-    <div className={`scene${tall ? ' is-tall' : ''}`}>
-      <div className="stage-wrap">
-        <div className="stage">{children}</div>
+    <StageCtx.Provider value={portrait ? TALL : WIDE}>
+      <div ref={root} className={`scene${portrait ? ' is-portrait' : ''}${short ? ' is-short' : ''}${snug ? ' is-snug' : ''}`}>
+        <div className="stage-wrap">
+          <div className="stage">{children}</div>
+        </div>
+        <div ref={bar} className="scene-bar">
+          <p className={`scene-caption${tone ? ` tone-${tone}` : ''}${caption.length > 112 ? ' is-long' : ''}`} aria-live="polite">
+            {step !== undefined && step > 0 && <StepTag n={step} now />}
+            <span>{caption}</span>
+          </p>
+          {controls && (
+            <div className="scene-controls" onClick={intoView}>
+              {controls}
+            </div>
+          )}
+        </div>
       </div>
-      <p className="scene-turn">Small screen? Turn your phone sideways for a bigger picture.</p>
-      <div className="scene-bar">
-        <p className={`scene-caption${tone ? ` tone-${tone}` : ''}`} aria-live="polite">
-          {step !== undefined && step > 0 && <StepTag n={step} now />}
-          <span>{caption}</span>
-        </p>
-        {controls && <div className="scene-controls">{controls}</div>}
-      </div>
-    </div>
+    </StageCtx.Provider>
   );
+}
+
+/** Where a piece goes on the tall (phone) stage, when stretching its wide-stage place is not good enough. */
+export interface Tall {
+  x?: number;
+  /** In tall-stage units: 0 at the top, 133.33 at the bottom. */
+  y?: number;
+  w?: number;
 }
 
 /** Place something on the stage, centred on (x, y). Changing x or y glides it there. */
@@ -55,6 +143,7 @@ export function At({
   x,
   y,
   w,
+  p,
   z,
   hide,
   delay,
@@ -66,6 +155,8 @@ export function At({
   x: number;
   y: number;
   w?: number;
+  /** Its place on the tall (phone) stage, if it needs its own. */
+  p?: Tall;
   z?: number;
   hide?: boolean;
   delay?: number;
@@ -74,14 +165,21 @@ export function At({
   style?: CSSProperties;
   children?: ReactNode;
 }) {
+  const stage = useStage();
+  const tx = stage.portrait ? (p?.x ?? x) : x;
+  const ty = stage.portrait ? (p?.y ?? y * stage.ky) : y;
+  const tw = stage.portrait ? (p?.w ?? w) : w;
   return (
     <div
       className={`at${hide ? ' is-hidden' : ''}${slow ? ' is-slow' : ''} ${className}`}
       style={{
         // Plain percentages of the stage: they glide reliably, unlike container units inside a transition.
-        left: `${x}%`,
-        top: `${(y / SH) * 100}%`,
-        width: w ? `${w}%` : undefined,
+        left: `${tx}%`,
+        top: `${(ty / stage.h) * 100}%`,
+        // On the tall stage the type is bigger. A piece with no width of its own takes the room its words need,
+        // and no piece is ever wider than the room there is around its middle: it never leaves the stage.
+        width: tw ? `${tw}%` : stage.portrait ? 'max-content' : undefined,
+        maxWidth: stage.portrait ? `${2 * Math.min(tx, SW - tx)}%` : undefined,
         zIndex: z,
         transitionDelay: delay ? `${delay}ms` : undefined,
         ...style,
@@ -93,12 +191,22 @@ export function At({
 }
 
 /** The drawing layer for lines and arrows, in stage units. */
-export function Draw({ children, tall }: { children: ReactNode; tall?: boolean }) {
+export function Draw({ children }: { children: ReactNode }) {
+  const { h } = useStage();
   return (
-    <svg className="draw" viewBox={`0 0 ${SW} ${tall ? 75 : SH}`} preserveAspectRatio="none" aria-hidden="true">
+    <svg className="draw" viewBox={`0 0 ${SW} ${h}`} preserveAspectRatio="none" aria-hidden="true">
       {children}
     </svg>
   );
+}
+
+/**
+ * Shapes drawn in wide-stage units (a frame, a grid) stretch with the stage when it stands up,
+ * so they stay under the pieces placed on them. Arrows do not need this: they find their own way.
+ */
+export function Stretch({ children }: { children: ReactNode }) {
+  const { ky } = useStage();
+  return ky === 1 ? <>{children}</> : <g transform={`scale(1 ${ky})`}>{children}</g>;
 }
 
 export function Arrow({
@@ -111,11 +219,14 @@ export function Arrow({
   flow,
   head = true,
   width = 0.42,
+  p,
 }: {
   from: P2;
   to: P2;
   /** Curve the line: positive bends one way, negative the other. */
   bend?: number;
+  /** Its ends on the tall (phone) stage, in tall-stage units, if the pieces it joins have their own places there. */
+  p?: { from?: P2; to?: P2; bend?: number };
   color?: string;
   off?: boolean;
   dashed?: boolean;
@@ -124,8 +235,10 @@ export function Arrow({
   head?: boolean;
   width?: number;
 }) {
-  const [x1, y1] = from;
-  const [x2, y2] = to;
+  const stage = useStage();
+  const [x1, y1] = stage.portrait ? (p?.from ?? [from[0], from[1] * stage.ky]) : from;
+  const [x2, y2] = stage.portrait ? (p?.to ?? [to[0], to[1] * stage.ky]) : to;
+  if (stage.portrait && p?.bend !== undefined) bend = p.bend;
   const dx = x2 - x1;
   const dy = y2 - y1;
   const len = Math.hypot(dx, dy) || 1;
@@ -143,6 +256,36 @@ export function Arrow({
       <path d={`M${x1} ${y1}Q${cx} ${cy} ${head ? bx : x2} ${head ? by : y2}`} strokeWidth={width} />
       {head && <polygon points={`${x2},${y2} ${bx - uy * hs * 0.62},${by + ux * hs * 0.62} ${bx + uy * hs * 0.62},${by - ux * hs * 0.62}`} />}
     </g>
+  );
+}
+
+/** Words on the drawing layer: a name beside an arrow, a mark on a scale. Bigger on the tall stage, like all type. */
+export function Note({
+  at,
+  p,
+  size = 1.6,
+  anchor = 'middle',
+  color,
+  dim,
+  opacity,
+  children,
+}: {
+  at: P2;
+  /** Its place on the tall (phone) stage, in tall-stage units. */
+  p?: P2;
+  size?: number;
+  anchor?: 'start' | 'middle' | 'end';
+  color?: string;
+  dim?: boolean;
+  opacity?: number;
+  children: ReactNode;
+}) {
+  const stage = useStage();
+  const [x, y] = stage.portrait ? (p ?? [at[0], at[1] * stage.ky]) : at;
+  return (
+    <text x={x} y={y} textAnchor={anchor} fontSize={size * (stage.portrait ? 1.6 : 1)} fill={color} opacity={opacity ?? (dim ? 0.3 : undefined)}>
+      {children}
+    </text>
   );
 }
 

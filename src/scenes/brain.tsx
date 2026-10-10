@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { useRunner } from '../lib/hooks';
-import { At, Btn, Bubble, Card, Choice, MiniRay, Pic, Scene, Slider, StepTag, Tag, Toggle, Typed, type Mood } from './kit';
+import { At, Btn, Bubble, Card, Choice, MiniRay, Pic, Scene, Slider, StepTag, Tag, Toggle, Typed, type Mood, usePortrait } from './kit';
 import { register, type SceneProps } from './registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ function NextWord() {
         </>
       }
     >
-      <At x={50} y={9.500} w={92}>
+      <At x={50} y={9.500} w={92} p={{ y: 13, w: 94 }}>
         <div className="nw-sentence">
           {OPENING.map((w) => (
             <span key={w + 'o'} className="nw-word is-given">
@@ -91,12 +91,12 @@ function NextWord() {
         </div>
       </At>
 
-      <At x={12} y={36}>
+      <At x={12} y={36} p={{ x: 50, y: 112 }}>
         <MiniRay mood={done ? 'happy' : picked !== null ? 'wow' : 'think'} size={5.600} />
       </At>
 
       {options.map(([word], i) => (
-        <At key={`${step}-${word}`} x={59} y={23 + i * 7.800} w={72}>
+        <At key={`${step}-${word}`} x={59} y={23 + i * 7.800} w={72} p={{ x: 50, y: 38 + i * 14, w: 92 }}>
           <div className={`nw-row${picked === i ? ' is-picked' : ''}${picked !== null && picked !== i ? ' is-dim' : ''}`}>
             <span className="nw-cand">{word}</span>
             <span className="nw-track">
@@ -107,7 +107,7 @@ function NextWord() {
         </At>
       ))}
 
-      <At x={59} y={34} hide={!done}>
+      <At x={59} y={34} hide={!done} p={{ x: 50, y: 62, w: 86 }}>
         <Card tone="ok">
           <span className="k-title">A whole sentence, one guess at a time. 🎉</span>
         </Card>
@@ -198,14 +198,14 @@ function PickBrain({ variant }: SceneProps) {
   const j = JOBS.find((x) => x.id === job)!;
   return (
     <Scene caption={j.caption} controls={<Choice<JobId> label="Pick a job" value={job} onChange={setJob} options={JOBS.map((x) => ({ id: x.id, label: x.label }))} />}>
-      <At x={50} y={5.500}>
+      <At x={50} y={5.500} p={{ y: 6 }}>
         <span className="k-label">Pick a job below. Which brain fits?</span>
       </At>
       {BRAINS.map((b, i) => {
         const [v, why] = j.result[b.id];
         const best = v === 'right';
         return (
-          <At key={b.id} x={19 + i * 31} y={31} w={28}>
+          <At key={b.id} x={19 + i * 31} y={31} w={28} p={{ x: 50, y: 30 + i * 39, w: 94 }}>
             <Card tone={VERDICT[v].tone} className={`pb-card${best ? ' is-best' : ''}`}>
               <div className="k-center">
                 <Pic size={2.600}>{b.icon}</Pic>
@@ -278,14 +278,14 @@ function JobCard() {
         </Btn>
       }
     >
-      <At x={50} y={7} w={46}>
+      <At x={50} y={7} w={46} p={{ w: 78 }}>
         <Bubble who="you">How do I brush my teeth?</Bubble>
       </At>
 
-      <At x={46} y={34}>
+      <At x={46} y={34} p={{ x: 74, y: 68 }}>
         <MiniRay mood={chosen?.mood ?? 'happy'} size={6.400} />
       </At>
-      <At x={46} y={19.500} hide={!!chosen}>
+      <At x={46} y={19.500} hide={!!chosen} p={{ x: 74, y: 36 }}>
         <Card soft>
           <span className="k-label">job card goes here</span>
         </Card>
@@ -294,7 +294,7 @@ function JobCard() {
       {JOB_CARDS.map((c, i) => {
         const on = card === c.id;
         return (
-          <At key={c.id} x={on ? 46 : 14.500} y={on ? 19.500 : 16 + i * 13.500} w={24} z={on ? 3 : 1}>
+          <At key={c.id} x={on ? 46 : 14.500} y={on ? 19.500 : 16 + i * 13.500} w={24} z={on ? 3 : 1} p={{ x: on ? 74 : 25, y: on ? 36 : 31 + i * 23, w: 44 }}>
             <button className={`jc-card${on ? ' is-on' : ''}`} onClick={() => setCard(on ? 'none' : c.id)} aria-pressed={on}>
               <span className="jc-top">
                 <Pic size={1.500}>{c.icon}</Pic>
@@ -306,7 +306,7 @@ function JobCard() {
         );
       })}
 
-      <At x={79} y={34} w={34}>
+      <At x={79} y={34} w={34} p={{ x: 50, y: 113, w: 92 }}>
         <Bubble who="ray" key={card}>
           <Typed text={chosen ? chosen.answer : NO_CARD} />
         </Bubble>
@@ -334,6 +334,8 @@ const ROOM = 8;
 const UNIT = 4.600; // stage units of height per size unit
 
 function Backpack({ variant }: SceneProps) {
+  // On a phone the backpack is taller and stands on the left, with the things to pack in two columns above it.
+  const tall = usePortrait();
   const [inPack, setInPack] = useState<Set<ItemId>>(() => new Set(variant === 'window' ? ['job', 'chat', 'notes', 'weather', 'cookbook', 'tools'] : variant === 'squish' ? ['job', 'chat', 'weather', 'cookbook', 'tools'] : ['job', 'chat']));
   const [squish, setSquish] = useState(false);
 
@@ -395,9 +397,11 @@ function Backpack({ variant }: SceneProps) {
 
   // Stack blocks from the bottom of the pack.
   let cursor = 0;
-  const FLOOR = 51;
+  const FLOOR = tall ? 118 : 51;
+  const U = tall ? 7.2 : UNIT;
+  const packX = tall ? 28 : 47.500;
   const blocks = packed.map((i) => {
-    const h = sizeOf(i) * UNIT;
+    const h = sizeOf(i) * U;
     const out = fell.includes(i.id);
     const y = FLOOR - cursor - h / 2;
     if (!out) cursor += h;
@@ -414,14 +418,14 @@ function Backpack({ variant }: SceneProps) {
         </Toggle>
       }
     >
-      <At x={50} y={5.500} w={62}>
+      <At x={50} y={5.500} w={62} p={{ y: 7, w: 92 }}>
         <Bubble who="you">What should I wear to Mia's party tomorrow?</Bubble>
       </At>
 
       {ITEMS.map((item, i) => {
         const on = inPack.has(item.id);
         return (
-          <At key={item.id} x={15} y={15.500 + i * 6.600} w={27}>
+          <At key={item.id} x={15} y={15.500 + i * 6.600} w={27} p={{ x: i % 2 ? 74.500 : 25.500, y: 21 + Math.floor(i / 2) * 9.800, w: 47 }}>
             <button className={`bp-item${on ? ' is-on' : ''}`} style={{ '--c': item.color } as CSSProperties} onClick={() => toggle(item.id)} aria-pressed={on}>
               <span>{item.icon}</span>
               <b>{item.name}</b>
@@ -432,13 +436,21 @@ function Backpack({ variant }: SceneProps) {
       })}
 
       {/* the backpack: what the brain sees */}
-      <At x={47.500} y={FLOOR - (ROOM * UNIT) / 2} w={25} z={0}>
-        <div className={`bp-pack${fell.length ? ' is-over' : ''}`} style={{ height: `${ROOM * UNIT}cqw` }}>
+      <At x={packX} y={FLOOR - (ROOM * U) / 2} w={25} z={0} p={{ y: FLOOR - (ROOM * U) / 2, w: 48 }}>
+        <div className={`bp-pack${fell.length ? ' is-over' : ''}`} style={{ height: `${ROOM * U}cqw` }}>
           <span className="bp-pack-label">what the brain sees</span>
         </div>
       </At>
       {blocks.map(({ item, h, y, out }) => (
-        <At key={item.id} x={out ? 64 + fell.indexOf(item.id) * 1.500 : 47.500} y={out ? 51 - fell.indexOf(item.id) * 3.600 : y} w={23} z={2} style={{ rotate: out ? `${10 + fell.indexOf(item.id) * 5}deg` : '0deg' }}>
+        <At
+          key={item.id}
+          x={out ? 64 + fell.indexOf(item.id) * 1.500 : 47.500}
+          y={out ? 49.500 - fell.indexOf(item.id) * 3.600 : y}
+          w={23}
+          z={2}
+          p={{ x: out ? 76 + fell.indexOf(item.id) * 1.500 : packX, y: out ? 122 - fell.indexOf(item.id) * 8 : y, w: out ? 40 : 45 }}
+          style={{ rotate: out ? `${10 + fell.indexOf(item.id) * 5}deg` : '0deg' }}
+        >
           <div className={`bp-block${out ? ' is-out' : ''}`} style={{ '--c': item.color, height: `${h - 0.5}cqw` } as CSSProperties}>
             <span>
               {item.icon} {item.name}
@@ -447,16 +459,16 @@ function Backpack({ variant }: SceneProps) {
           </div>
         </At>
       ))}
-      <At x={47.500} y={53.200}>
+      <At x={47.500} y={53.200} p={{ x: packX, y: 124.500 }}>
         <Tag tone={fell.length ? 'bad' : total > ROOM - 2 ? 'warn' : 'ok'}>
           {Math.min(total, 99)} of {ROOM} full
         </Tag>
       </At>
 
-      <At x={81} y={43}>
+      <At x={81} y={43} p={{ x: 80, y: 96 }}>
         <MiniRay mood={mood} size={4.600} />
       </At>
-      <At x={81} y={24} w={32}>
+      <At x={81} y={24} w={32} p={{ x: 76, y: 69, w: 44 }}>
         <Bubble who="ray" tone={tone === 'ok' ? 'ok' : tone} key={answer}>
           <Typed text={answer.trim()} />
         </Bubble>
@@ -520,12 +532,12 @@ function ThinkFirst() {
         </>
       }
     >
-      <At x={50} y={6.500} w={78}>
+      <At x={50} y={6.500} w={78} p={{ y: 8, w: 92 }}>
         <Bubble who="you">3 baskets. 4 apples in each. Ray eats 2 apples. How many are left?</Bubble>
       </At>
 
       {[0, 1, 2].map((b) => (
-        <At key={b} x={12 + b * 13.500} y={32}>
+        <At key={b} x={12 + b * 13.500} y={32} p={{ x: 22 + b * 28, y: 32 }}>
           <div className={`tf-basket${thinking && n >= 1 ? ' is-counted' : ''}`}>
             <div className="tf-apples">
               {[0, 1, 2, 3].map((a) => (
@@ -538,12 +550,12 @@ function ThinkFirst() {
           </div>
         </At>
       ))}
-      <At x={25.500} y={46.500} hide={!(thinking && n >= 2)}>
+      <At x={25.500} y={46.500} hide={!(thinking && n >= 2)} p={{ x: 50, y: 46 }}>
         <Tag tone="info">{eaten ? '10 apples left' : '12 apples'}</Tag>
       </At>
 
       {STEPS.map((s, i) => (
-        <At key={i} x={62} y={20 + i * 8.200} w={30} hide={!(thinking && n > i)}>
+        <At key={i} x={62} y={20 + i * 8.200} w={30} hide={!(thinking && n > i)} p={{ x: 36, y: 62 + i * 16, w: 64 }}>
           <Card>
             <StepTag n={i + 1} corner now={n === i + 1} />
             <small>thought {i + 1}</small>
@@ -552,16 +564,16 @@ function ThinkFirst() {
         </At>
       ))}
 
-      <At x={88} y={41}>
+      <At x={88} y={41} p={{ x: 84, y: 94 }}>
         <MiniRay mood={mode === 'fast' ? 'oops' : doneThinking ? 'happy' : thinking ? 'think' : 'happy'} size={4.800} />
       </At>
-      <At x={88} y={25} hide={!(mode === 'fast' || doneThinking)} w={17}>
+      <At x={88} y={25} hide={!(mode === 'fast' || doneThinking)} w={17} p={{ x: 84, y: 70, w: 27 }}>
         <Bubble who="ray" tone={mode === 'fast' ? 'bad' : 'ok'}>
           {mode === 'think' && <StepTag n={4} corner now />}
           <b style={{ fontSize: '1.5em' }}>{mode === 'fast' ? '9! ✕' : '10 ✓'}</b>
         </Bubble>
       </At>
-      <At x={62} y={49} hide={mode === 'idle'}>
+      <At x={62} y={49} hide={mode === 'idle'} p={{ x: 50, y: 120 }}>
         <div className="k-row">
           <Tag tone={mode === 'fast' ? 'ok' : 'warn'}>⏱ {mode === 'fast' ? 'half a second' : 'four seconds'}</Tag>
           <Tag tone={mode === 'fast' ? 'ok' : 'warn'}>{mode === 'fast' ? 'costs a little' : 'costs more'}</Tag>
@@ -611,30 +623,30 @@ function ShowMe() {
         </>
       }
     >
-      <At x={34} y={6.500} w={48}>
+      <At x={34} y={6.500} w={48} p={{ x: 50, y: 7, w: 80 }}>
         <Bubble who="you">Name a fruit and its colour.</Bubble>
       </At>
 
-      <At x={17} y={19.500}>
+      <At x={17} y={19.500} p={{ x: 27, y: 20 }}>
         <span className="k-small">{shown ? 'your examples' : 'no examples'}</span>
       </At>
       {['apple → red', 'lime → green'].map((ex, i) => (
-        <At key={ex} x={17} y={27 + i * 8} w={24} style={{ opacity: shown ? 1 : 0.15 }}>
+        <At key={ex} x={17} y={27 + i * 8} w={24} p={{ x: 27, y: 29 + i * 10, w: 42 }} style={{ opacity: shown ? 1 : 0.15 }}>
           <Card soft={!shown} className="k-mono" style={{ textAlign: 'center' }}>
             {ex}
           </Card>
         </At>
       ))}
 
-      <At x={45} y={34}>
+      <At x={45} y={34} p={{ x: 75, y: 33 }}>
         <MiniRay mood={shown ? 'happy' : 'wink'} size={5.200} />
       </At>
 
-      <At x={78} y={12}>
+      <At x={78} y={12} p={{ x: 50, y: 58 }}>
         <span className="k-small">what Ray says</span>
       </At>
       {answers.map((a, i) => (
-        <At key={`${shown}${i}`} x={78} y={21 + i * 9.500} w={38}>
+        <At key={`${shown}${i}`} x={78} y={21 + i * 9.500} w={38} p={{ x: 50, y: 70 + i * 17, w: 86 }}>
           <Bubble who="ray" tone={shown ? 'ok' : 'warn'}>
             <StepTag n={i + 1} corner now={i === answers.length - 1} />
             <span className={shown ? 'k-mono' : ''}>{a}</span>
@@ -705,10 +717,10 @@ function Switchboard() {
         </Btn>
       }
     >
-      <At x={11} y={30}>
+      <At x={11} y={30} p={{ x: 24, y: 15 }}>
         <MiniRay mood={winner === 'none' ? 'sad' : won ? 'happy' : 'think'} size={4.600} label="Ray, waiting for a brain" />
       </At>
-      <At x={37} y={30} w={17}>
+      <At x={37} y={30} w={17} p={{ x: 66, y: 15, w: 42 }}>
         <Card className={`k-center${busy ? ' k-glow' : ''}`}>
           <Pic size={2.400}>🔀</Pic>
           <span className="k-title">Switchboard</span>
@@ -717,7 +729,7 @@ function Switchboard() {
       {LINE.map((b, i) => {
         const off = asleep[b.id];
         return (
-          <At key={b.id} x={78} y={12.500 + i * 16.500} w={30}>
+          <At key={b.id} x={78} y={12.500 + i * 16.500} w={30} p={{ x: 50, y: 46 + i * 25, w: 80 }}>
             <button
               className={`sb-brain${off ? ' is-asleep' : ''}${trying === i && busy ? ' is-trying' : ''}${winner === i ? ' is-won' : ''}`}
               onClick={() => {
@@ -736,7 +748,7 @@ function Switchboard() {
           </At>
         );
       })}
-      <At x={37} y={46} hide={winner === null}>
+      <At x={37} y={46} hide={winner === null} p={{ x: 50, y: 123 }}>
         <Tag tone={won ? 'ok' : 'bad'}>{won ? `answered by: ${won.name.toLowerCase()}` : 'nobody answered'}</Tag>
       </At>
     </Scene>

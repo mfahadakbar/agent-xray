@@ -32,6 +32,8 @@ export function Room({ chain, path, level, setLevel, toTools = false }: { chain:
   const next = at < siblings.length - 1 ? siblings[at + 1] : null;
   const up = path.slice(0, -1);
   const peek = node.tools ? [] : popularInside(node, path);
+  // On a narrow screen the page is one long column. These take you straight to a part of it.
+  const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
     <main className="room" style={{ '--c': organ.color } as CSSProperties}>
@@ -56,16 +58,34 @@ export function Room({ chain, path, level, setLevel, toTools = false }: { chain:
           <p className="tagline">{node.tagline}</p>
         </header>
 
+        {(node.children || node.tools) && (
+          <nav className="jump" aria-label="On this page">
+            <button onClick={() => jump('what')}>
+              <span aria-hidden="true">💡</span> What is it?
+            </button>
+            {node.children && (
+              <button onClick={() => jump('inside')}>
+                <span aria-hidden="true">🔍</span> Look inside <i>{node.children.length}</i>
+              </button>
+            )}
+            {node.tools && (
+              <button onClick={() => jump('tools')}>
+                <span aria-hidden="true">🧰</span> Tools <i>{node.tools.length}</i>
+              </button>
+            )}
+          </nav>
+        )}
+
         <TripStrip at={path.join('/')} />
 
         {scene && (
-          <section className="scene-slot" aria-label={`Try it: ${node.title}`}>
+          <section className="scene-slot" id="try" aria-label={`Try it: ${node.title}`}>
             <scene.Component key={node.scene} variant={scene.variant} />
           </section>
         )}
 
         {node.children && (
-          <section className="inside">
+          <section className="inside" id="inside">
             <h2>
               <span aria-hidden="true">🔍</span> Look inside {node.title}
             </h2>
@@ -149,7 +169,7 @@ export function Room({ chain, path, level, setLevel, toTools = false }: { chain:
         )}
       </div>
 
-      <aside className="room-side">
+      <aside className="room-side" id="what">
         <InfoPanel node={node} level={level} setLevel={setLevel} />
       </aside>
     </main>

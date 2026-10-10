@@ -54,11 +54,11 @@ function Cases({ cases, ask, cure = 'The cure' }: { cases: Case[]; ask?: string;
       }
     >
       {ask && (
-        <At x={27} y={7} w={46}>
+        <At x={27} y={7} w={46} p={{ x: 50, y: 8, w: 86 }}>
           <Bubble who="you">{ask}</Bubble>
         </At>
       )}
-      <At x={27} y={ask ? 25 : 20} w={44}>
+      <At x={27} y={ask ? 25 : 20} w={44} p={{ x: 50, y: ask ? 30 : 20, w: 90 }}>
         <Card className="cz-case k-pop" tone={tone} key={id}>
           <Pic size={2.800}>{c.icon}</Pic>
           <span>
@@ -67,17 +67,17 @@ function Cases({ cases, ask, cure = 'The cure' }: { cases: Case[]; ask?: string;
           </span>
         </Card>
       </At>
-      <At x={27} y={ask ? 44 : 40} w={44} hide={!good}>
+      <At x={27} y={ask ? 44 : 40} w={44} p={{ x: 50, y: ask ? 104 : 96, w: 90 }} hide={!good}>
         <Card tone="ok">
           <small>{cure.toLowerCase()}</small>
           {c.fix}
         </Card>
       </At>
 
-      <At x={77} y={42}>
+      <At x={77} y={42} p={{ x: 14, y: ask ? 66 : 57 }}>
         <MiniRay mood={good ? 'happy' : (c.mood ?? 'oops')} size={5.200} />
       </At>
-      <At x={76} y={19} w={41}>
+      <At x={76} y={19} w={41} p={{ x: 59, y: ask ? 66 : 57, w: 74 }}>
         <Bubble who="ray" tone={tone} key={`${id}${good}`}>
           <Typed text={good ? (c.good ?? '') : c.says} />
         </Bubble>
@@ -270,17 +270,17 @@ function Plan() {
   };
   return (
     <Scene caption={PLAN_CAPTIONS[s.i]} tone={s.i === 3 ? 'bad' : s.atEnd ? 'ok' : undefined} controls={<StepNav s={s} />}>
-      <At x={32} y={7} w={50}>
+      <At x={32} y={7} w={50} p={{ x: 50, y: 8, w: 88 }}>
         <Bubble who="you">Plan a birthday party for Mia. 🎂</Bubble>
       </At>
-      <At x={32} y={15.500} hide={s.i < 1}>
+      <At x={32} y={15.500} p={{ x: 50, y: 22 }} hide={s.i < 1}>
         <span className="k-small">Ray's plan</span>
       </At>
       {PLAN.map((text, i) => {
         const st = stateOf(i);
         const swapped = i === 1 && s.i >= 4;
         return (
-          <At key={i} x={32} y={22 + i * 7.400} w={48} hide={s.i < 1} delay={s.i === 1 ? i * 140 : 0}>
+          <At key={i} x={32} y={22 + i * 7.400} w={48} p={{ x: 50, y: 34 + i * 12, w: 90 }} hide={s.i < 1} delay={s.i === 1 ? i * 140 : 0}>
             <div className={`pl-row is-${st}`}>
               <b>{st === 'done' ? '✓' : st === 'bad' ? '✕' : i + 1}</b>
               <span key={swapped ? 'new' : 'old'} className={swapped ? 'k-pop' : ''}>
@@ -291,13 +291,13 @@ function Plan() {
           </At>
         );
       })}
-      <At x={82} y={34}>
+      <At x={82} y={34} p={{ x: 20, y: 102 }}>
         <MiniRay mood={s.i === 3 ? 'wow' : s.i === 4 ? 'happy' : s.i === 0 ? 'think' : 'happy'} size={5.400} />
       </At>
-      <At x={82} y={16} hide={s.i !== 3}>
+      <At x={82} y={16} p={{ x: 62, y: 100 }} hide={s.i !== 3}>
         <Tag tone="bad">🚧 The park is closed!</Tag>
       </At>
-      <At x={82} y={16} hide={s.i !== 4}>
+      <At x={82} y={16} p={{ x: 62, y: 100 }} hide={s.i !== 4}>
         <Pic size={2.600}>🎉</Pic>
       </At>
     </Scene>
@@ -373,11 +373,11 @@ function Blocks() {
     >
       <Draw>
         {[0, 1, 2].map((i) => (
-          <Arrow key={i} from={[COLS[i].x + 10.500, 26]} to={[COLS[i + 1].x - 10.500, 26]} off={pos <= i} flow={pos === i + 1 && busy} />
+          <Arrow key={i} from={[COLS[i].x + 10.500, 26]} to={[COLS[i + 1].x - 10.500, 26]} p={{ from: [13, 22 + i * 23], to: [13, 31.500 + i * 23] }} off={pos <= i} flow={pos === i + 1 && busy} />
         ))}
       </Draw>
       {COLS.map((c, ci) => (
-        <At key={c.slot} x={c.x} y={7}>
+        <At key={c.slot} x={c.x} y={7} p={{ x: 13, y: 16 + ci * 23 }}>
           <span className={`k-small bk-title${pos === ci ? ' is-on' : ''}`}>
             <StepTag n={ci + 1} now={pos === ci} /> {c.title}
           </span>
@@ -385,7 +385,7 @@ function Blocks() {
       ))}
       {COLS.map((c, ci) =>
         c.slot === 'think' ? (
-          <At key="think" x={c.x} y={26} w={19}>
+          <At key="think" x={c.x} y={26} w={19} p={{ x: 62, y: 16 + ci * 23, w: 62 }}>
             <div className={`bk-block is-on is-fixed${pos === ci ? ' is-live' : ''}`}>
               <Pic size={1.700}>🧠</Pic>
               <b>A brain</b>
@@ -395,7 +395,7 @@ function Blocks() {
           BLOCKS[c.slot].map((b, bi) => {
             const on = pick[c.slot as Slot] === b.id;
             return (
-              <At key={b.id} x={c.x} y={19 + bi * 14} w={19}>
+              <At key={b.id} x={c.x} y={19 + bi * 14} w={19} p={{ x: 46 + bi * 32, y: 16 + ci * 23, w: 30 }}>
                 <button className={`bk-block${on ? ' is-on' : ''}${on && pos === ci ? ' is-live' : ''}`} onClick={() => choose(c.slot as Slot, b.id)} aria-pressed={on}>
                   <Pic size={1.700}>{b.icon}</Pic>
                   <b>{b.name}</b>
@@ -405,7 +405,7 @@ function Blocks() {
           })
         ),
       )}
-      <At x={50} y={47.500} w={62} hide={!done}>
+      <At x={50} y={47.500} w={62} p={{ y: 113, w: 92 }} hide={!done}>
         <Card tone="ok" key={`${pick.when}${pick.do}${pick.tell}`} className="k-pop">
           <small>{result}</small>
           {body}
@@ -455,13 +455,13 @@ function Ribbon() {
     >
       {!raw ? (
         <>
-          <At x={50} y={7}>
+          <At x={50} y={7} p={{ y: 8 }}>
             <Tag>
               <StepTag n={1} /> 🪪 job card: {TURNS[0][1]}
             </Tag>
           </At>
           {shown.slice(1).map(([role, text], i) => (
-            <At key={i} x={role === 'user' ? 57 : 43} y={17 + i * 8.600} w={40}>
+            <At key={i} x={role === 'user' ? 57 : 43} y={17 + i * 8.600} w={40} p={{ x: 50, y: 28 + i * 16, w: 88 }}>
               <div className={`cs-row is-${role === 'user' ? 'you' : 'ray'}`}>
                 <StepTag n={i + 2} small /> {text}
               </div>
@@ -469,7 +469,7 @@ function Ribbon() {
           ))}
         </>
       ) : (
-        <At x={50} y={26} w={84}>
+        <At x={50} y={26} w={84} p={{ y: 64, w: 92 }}>
           <div className="rb-ribbon">
             {shown.map(([role, text], i) => (
               <span key={i} className={`rb-turn is-${role}${i === shown.length - 1 ? ' is-last' : ''}`}>
@@ -484,7 +484,7 @@ function Ribbon() {
           </div>
         </At>
       )}
-      <At x={50} y={51}>
+      <At x={50} y={51} p={{ y: 122 }}>
         <Tag tone={turns === 2 ? 'warn' : 'info'}>{raw ? `the ribbon is ${words} words long` : `${shown.length - 1} messages`}</Tag>
       </At>
     </Scene>
@@ -532,17 +532,17 @@ function School() {
       tone={m.ok ? 'ok' : 'bad'}
       controls={<Choice<Schooling> label="How Ray learns the shape" value={mode} onChange={setMode} options={(Object.keys(SCHOOLING) as Schooling[]).map((id) => ({ id, label: SCHOOLING[id].chip }))} />}
     >
-      <At x={30} y={7} w={40}>
+      <At x={30} y={7} w={40} p={{ x: 50, y: 7, w: 70 }}>
         <Bubble who="you">Turn on the lights.</Bubble>
       </At>
-      <At x={78} y={7}>
+      <At x={78} y={7} p={{ x: 50, y: 19 }}>
         <Tag>🏠 the house only understands: lights(on)</Tag>
       </At>
 
-      <At x={17} y={21}>
+      <At x={17} y={21} p={{ x: 25, y: 33 }}>
         <span className="k-small">Ray's backpack</span>
       </At>
-      <At x={17} y={36} w={24}>
+      <At x={17} y={36} w={24} p={{ x: 25, y: 60, w: 38 }}>
         <div className="sc-pack">
           <i style={{ height: `${m.pack * 100}%` }} />
           {mode === 'examples' && (
@@ -554,25 +554,25 @@ function School() {
           )}
         </div>
       </At>
-      <At x={17} y={51}>
+      <At x={17} y={51} p={{ x: 50, y: 85 }}>
         <Tag tone={m.pack > 0.3 ? 'warn' : 'ok'}>{m.note}</Tag>
       </At>
 
-      <At x={50} y={36}>
+      <At x={50} y={36} p={{ x: 72, y: 64 }}>
         <MiniRay mood={m.ok ? 'happy' : 'wink'} size={5.600} />
       </At>
-      <At x={50} y={21.500} hide={mode !== 'school'}>
+      <At x={50} y={21.500} p={{ x: 72, y: 46 }} hide={mode !== 'school'}>
         <span className="k-pop" style={{ display: 'inline-block' }}>
           <Pic size={2.400}>🎓</Pic>
         </span>
       </At>
 
-      <At x={80} y={30} w={34}>
+      <At x={80} y={30} w={34} p={{ x: 50, y: 104, w: 86 }}>
         <Bubble who="ray" tone={m.ok ? 'ok' : 'bad'} key={mode}>
           <span className={m.ok ? 'k-mono' : ''}>{m.says}</span>
         </Bubble>
       </At>
-      <At x={80} y={42}>
+      <At x={80} y={42} p={{ x: 50, y: 121 }}>
         <Tag tone={m.ok ? 'ok' : 'bad'}>{m.ok ? '💡 the lights go on' : '🏠 the house does not understand'}</Tag>
       </At>
     </Scene>
@@ -631,28 +631,28 @@ function Reflect() {
         </>
       }
     >
-      <At x={40} y={7} w={68}>
+      <At x={40} y={7} w={68} p={{ x: 50, y: 9, w: 90 }}>
         <Bubble who="you">Two tickets cost $30 each. A snack costs $5. How much is that?</Bubble>
       </At>
-      <At x={14} y={36}>
+      <At x={14} y={36} p={{ x: 16, y: 108 }}>
         <MiniRay mood={phase === 2 ? 'think' : done ? (on ? 'happy' : 'oops') : 'happy'} size={5.200} />
       </At>
 
-      <At x={42} y={22} w={34} hide={phase < 1}>
+      <At x={42} y={22} w={34} p={{ x: 50, y: 33, w: 84 }} hide={phase < 1}>
         <Card tone={phase >= 2 && on ? 'bad' : undefined}>
           <StepTag n={1} corner now={phase === 1} />
           <small>first try</small>
           <span className="k-mono">$30 + $5 = $35</span>
         </Card>
       </At>
-      <At x={42} y={34} w={34} hide={!(on && phase >= 2)}>
+      <At x={42} y={34} w={34} p={{ x: 50, y: 54, w: 84 }} hide={!(on && phase >= 2)}>
         <Card tone="warn">
           <StepTag n={2} corner now={phase === 2} />
           <small>🪞 Ray checks</small>
           Wait. TWO tickets. That is 30 twice.
         </Card>
       </At>
-      <At x={42} y={46} w={34} hide={!(on && done)}>
+      <At x={42} y={46} w={34} p={{ x: 50, y: 75, w: 84 }} hide={!(on && done)}>
         <Card tone="ok">
           <StepTag n={3} corner />
           <small>second try</small>
@@ -660,13 +660,13 @@ function Reflect() {
         </Card>
       </At>
 
-      <At x={82} y={28} w={24} hide={!done}>
+      <At x={82} y={28} w={24} p={{ x: 52, y: 103, w: 36 }} hide={!done}>
         <Bubble who="ray" tone={on ? 'ok' : 'bad'} key={`${on}`}>
           <StepTag n={on ? 4 : 2} corner now />
           <b style={{ fontSize: '1.5em' }}>{on ? '$65 ✓' : '$35 ✕'}</b>
         </Bubble>
       </At>
-      <At x={82} y={43} hide={!done}>
+      <At x={82} y={43} p={{ x: 52, y: 121 }} hide={!done}>
         <Tag tone={on ? 'warn' : 'ok'}>{on ? 'two brain calls' : 'one brain call'}</Tag>
       </At>
     </Scene>
@@ -737,16 +737,16 @@ function CodeActions() {
         </>
       }
     >
-      <At x={40} y={7} w={66}>
+      <At x={40} y={7} w={66} p={{ x: 50, y: 9, w: 90 }}>
         <Bubble who="you">What do an apple, a banana and a cherry cost together?</Bubble>
       </At>
-      <At x={12} y={33}>
+      <At x={12} y={33} p={{ x: 14, y: 86 }}>
         <MiniRay mood={done ? 'happy' : busy ? 'think' : 'happy'} size={5} />
       </At>
 
       {mode === 'slips' ? (
         FRUIT.map(([icon, name, price], i) => (
-          <At key={name} x={47} y={20 + i * 8.400} w={38} hide={n <= i && !(busy && n === i)}>
+          <At key={name} x={47} y={20 + i * 8.400} w={38} p={{ x: 32, y: 30 + i * 12.500, w: 56 }} hide={n <= i && !(busy && n === i)}>
             <div className={`ca-slip${n > i ? ' is-back' : ''}`}>
               <span>
                 <StepTag n={i + 1} now={n === i} /> price({name})
@@ -756,7 +756,7 @@ function CodeActions() {
           </At>
         ))
       ) : (
-        <At x={47} y={28} w={40} hide={n < 1 && !busy}>
+        <At x={47} y={28} w={40} p={{ x: 32, y: 43, w: 58 }} hide={n < 1 && !busy}>
           <Card className="ca-code" tone={n >= 1 ? 'ok' : undefined}>
             <StepTag n={1} corner now={n < 1} />
             <small>Ray's little program</small>
@@ -766,7 +766,7 @@ function CodeActions() {
         </At>
       )}
 
-      <At x={86} y={29} w={22}>
+      <At x={86} y={29} w={22} p={{ x: 80, y: 42, w: 34 }}>
         <Card className="k-center">
           <span className="k-title">Price list</span>
           <small>a tool</small>
@@ -780,13 +780,13 @@ function CodeActions() {
         </Card>
       </At>
 
-      <At x={34} y={49.500} w={40} hide={!done}>
+      <At x={34} y={49.500} w={40} p={{ x: 58, y: 104, w: 72 }} hide={!done}>
         <Bubble who="ray" tone="ok" key={mode}>
           <StepTag n={mode === 'slips' ? 4 : 2} corner now />
           Together they cost 6 coins.
         </Bubble>
       </At>
-      <At x={78} y={49.500}>
+      <At x={78} y={49.500} p={{ x: 50, y: 121 }}>
         <Tag tone={mode === 'slips' && calls > 2 ? 'warn' : 'ok'}>brain calls: {calls}</Tag>
       </At>
     </Scene>

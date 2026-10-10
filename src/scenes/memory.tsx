@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSteps } from '../lib/hooks';
-import { At, Btn, Bubble, Card, Choice, MiniRay, Pic, Scene, Slider, StepNav, StepTag, Tag, Toggle, Typed, type Mood } from './kit';
+import { At, Btn, Bubble, Card, Choice, MiniRay, Pic, Scene, Slider, StepNav, StepTag, Tag, Toggle, Typed, usePortrait, type Mood } from './kit';
 import { register, type SceneProps } from './registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ function RememberMe() {
           : 'No note, no memory. For Ray this is a first meeting.';
 
   // The note travels: from the chat, into the drawer, and back out to Ray.
-  const note = !on ? null : s.i < 2 ? { x: 80, y: 24 } : { x: 47, y: 40 };
+  const note = !on ? null : s.i < 2 ? { x: 80, y: 24, p: { x: 70, y: 76.500 } } : { x: 47, y: 40, p: { x: 36, y: 88 } };
 
   return (
     <Scene
@@ -47,32 +47,32 @@ function RememberMe() {
         </>
       }
     >
-      <At x={8} y={5.500}>
+      <At x={8} y={5.500} p={{ x: 17, y: 6 }}>
         <Tag tone="info">{later ? '🌙 the next day' : '☀️ today'}</Tag>
       </At>
 
-      <At x={33} y={13} w={40} hide={later}>
+      <At x={33} y={13} w={40} p={{ x: 45, y: 19, w: 80 }} hide={later}>
         <Bubble who="you">Hi! My name is Sam.</Bubble>
       </At>
-      <At x={33} y={22} w={40} hide={later}>
+      <At x={33} y={22} w={40} p={{ x: 45, y: 32, w: 80 }} hide={later}>
         <Bubble who="ray">Nice to meet you, Sam!</Bubble>
       </At>
-      <At x={33} y={20} hide={s.i !== 1}>
+      <At x={33} y={20} p={{ x: 45, y: 26 }} hide={s.i !== 1}>
         <Pic size={4}>💤</Pic>
       </At>
-      <At x={33} y={13} w={40} hide={!asked}>
+      <At x={33} y={13} w={40} p={{ x: 45, y: 19, w: 80 }} hide={!asked}>
         <Bubble who="you">What's my name?</Bubble>
       </At>
-      <At x={36} y={25} w={44} hide={!asked}>
+      <At x={36} y={25} w={44} p={{ x: 47, y: 33, w: 84 }} hide={!asked}>
         <Bubble who="ray" tone={on ? 'ok' : 'bad'} key={`${on}${asked}`}>
           {on ? "You're Sam! 👋" : "Hmm. I don't know. Have we met?"}
         </Bubble>
       </At>
-      <At x={20} y={43}>
+      <At x={20} y={43} p={{ x: 21, y: 104 }}>
         <MiniRay mood={s.i === 1 ? 'sleep' : asked ? (on ? 'happy' : 'sad') : 'happy'} size={5} />
       </At>
 
-      <At x={80} y={30} w={30}>
+      <At x={80} y={30} w={30} p={{ x: 70, y: 84, w: 50 }}>
         <Card className="mm-cabinet" soft={!on}>
           <span className="k-small">{on ? 'memory' : 'memory is off'}</span>
           <div className={`mm-drawer${on && s.i < 2 ? ' is-full' : ''}`} />
@@ -81,7 +81,7 @@ function RememberMe() {
         </Card>
       </At>
       {note && (
-        <At x={note.x} y={note.y} z={4} slow>
+        <At x={note.x} y={note.y} p={note.p} z={4} slow>
           <span className="mm-note">name: Sam</span>
         </At>
       )}
@@ -116,7 +116,10 @@ function ChatSoFar({ variant }: SceneProps) {
       ? 'The old messages are gone, but a short version of them stays. Ray still knows.'
       : `Ray only re-reads the last ${n === 1 ? 'message' : `${n} messages`}. The giraffe is too far back.`;
 
-  const rowY = (i: number) => 6.500 + i * 5.900;
+  // On the tall (phone) stage the chat takes the full width, with more room between the lines.
+  const tall = usePortrait();
+  const ROW = tall ? 11.400 : 5.900;
+  const rowY = (i: number) => (tall ? 9 : 6.500) + i * ROW;
 
   return (
     <Scene
@@ -133,18 +136,18 @@ function ChatSoFar({ variant }: SceneProps) {
     >
       {/* the window: what the brain is shown */}
       {n > 0 && (
-        <At x={31} y={(rowY(first) + rowY(CHAT.length - 1)) / 2} w={57} z={0}>
-          <div className="cs-window" style={{ height: `${(n - 1) * 5.900 + 5.300}cqw` }}>
+        <At x={31} y={(rowY(first) + rowY(CHAT.length - 1)) / 2} w={57} p={{ x: 50, y: (rowY(first) + rowY(CHAT.length - 1)) / 2, w: 96 }} z={0}>
+          <div className="cs-window" style={{ height: `${(n - 1) * ROW + (tall ? 9.600 : 5.300)}cqw` }}>
             <span>Ray re-reads this</span>
           </div>
         </At>
       )}
       {CHAT.map(([who, text], i) => (
-        <At key={i} x={who === 'you' ? 34 : 28} y={rowY(i)} w={46} z={1} style={{ opacity: i < first ? 0.2 : 1 }}>
+        <At key={i} x={who === 'you' ? 34 : 28} y={rowY(i)} w={46} p={{ x: 50, y: rowY(i), w: 88 }} z={1} style={{ opacity: i < first ? 0.2 : 1 }}>
           <div className={`cs-row is-${who}`}>{text}</div>
         </At>
       ))}
-      <At x={31} y={(rowY(0) + rowY(Math.max(0, first - 1))) / 2} w={40} z={3} hide={!(summary && hidden)}>
+      <At x={31} y={(rowY(0) + rowY(Math.max(0, first - 1))) / 2} w={40} p={{ x: 50, y: (rowY(0) + rowY(Math.max(0, first - 1))) / 2, w: 70 }} z={3} hide={!(summary && hidden)}>
         <Card tone="ok">
           <small>the short version</small>
           Likes giraffes{first > 2 ? ' and blue' : ''}
@@ -152,14 +155,14 @@ function ChatSoFar({ variant }: SceneProps) {
         </Card>
       </At>
 
-      <At x={34} y={rowY(CHAT.length) + 3.200} w={46} z={1}>
+      <At x={34} y={rowY(CHAT.length) + 3.200} w={46} p={{ x: 50, y: rowY(CHAT.length) + 2, w: 82 }} z={1}>
         <Bubble who="you">What was my favourite animal?</Bubble>
       </At>
 
-      <At x={82} y={41}>
+      <At x={82} y={41} p={{ x: 17, y: 113 }}>
         <MiniRay mood={knows ? 'happy' : 'sad'} size={5} />
       </At>
-      <At x={81} y={21} w={30}>
+      <At x={81} y={21} w={30} p={{ x: 61, y: 112, w: 70 }}>
         <Bubble who="ray" tone={knows ? 'ok' : 'bad'} key={`${knows}${seesGiraffe}`}>
           {seesGiraffe ? 'A giraffe! 🦒' : summary ? 'A giraffe! It says so in my short version.' : "I can't see that far back. I don't know."}
         </Bubble>
@@ -191,7 +194,7 @@ function StickyNotes() {
             : "Mia has her own drawer, and it is empty. Ray never mixes people up.";
 
   // The note: written near the chat, filed in Sam's drawer, then brought to Ray when Sam comes back.
-  const noteAt = s.i === 0 ? null : s.i === 3 && sam ? { x: 40, y: 43 } : { x: 81, y: 19 };
+  const noteAt = s.i === 0 ? null : s.i === 3 && sam ? { x: 40, y: 43, p: { x: 50, y: 112 } } : { x: 81, y: 19, p: { x: 29, y: 82.500 } };
 
   return (
     <Scene
@@ -215,33 +218,33 @@ function StickyNotes() {
         </>
       }
     >
-      <At x={9} y={5.500}>
+      <At x={9} y={5.500} p={{ x: 17, y: 6 }}>
         <Tag tone="info">{day2 ? '🌙 day two' : '☀️ day one'}</Tag>
       </At>
 
-      <At x={36} y={13} w={40} hide={day2}>
+      <At x={36} y={13} w={40} p={{ x: 46, y: 19, w: 80 }} hide={day2}>
         <Bubble who="you">I love dinosaurs! 🦖</Bubble>
       </At>
-      <At x={32} y={22} w={36} hide={day2 || s.i < 1}>
+      <At x={32} y={22} w={36} p={{ x: 46, y: 32, w: 82 }} hide={day2 || s.i < 1}>
         <Bubble who="ray">Dinosaurs are the best. I'll remember that.</Bubble>
       </At>
-      <At x={34} y={18} hide={s.i !== 2}>
+      <At x={34} y={18} p={{ x: 46, y: 26 }} hide={s.i !== 2}>
         <Pic size={3.600}>🌙</Pic>
       </At>
-      <At x={36} y={12} w={40} hide={!story}>
+      <At x={36} y={12} w={40} p={{ x: 46, y: 18, w: 80 }} hide={!story}>
         <Bubble who="you">{sam ? '🧒' : '👧'} Tell me a story!</Bubble>
       </At>
-      <At x={34} y={26} w={48} hide={!story}>
+      <At x={34} y={26} w={48} p={{ x: 50, y: 38, w: 92 }} hide={!story}>
         <Bubble who="ray" tone="ok" key={who}>
           <Typed text={sam ? 'Once upon a time, a brave little T-Rex named Rexy stomped through the jungle…' : 'Once upon a time, a little rabbit found a shiny key…'} />
         </Bubble>
       </At>
-      <At x={14} y={44}>
+      <At x={14} y={44} p={{ x: 17, y: 113 }}>
         <MiniRay mood={s.i === 2 ? 'sleep' : 'happy'} size={4.600} />
       </At>
 
       {(['sam', 'mia'] as const).map((p, i) => (
-        <At key={p} x={81} y={19 + i * 22} w={30}>
+        <At key={p} x={81} y={19 + i * 22} w={30} p={{ x: 29 + i * 44, y: 80, w: 42 }}>
           <Card className={`sn-drawer${story && who === p ? ' is-open' : ''}`} color={p === 'sam' ? '#5aa9ff' : '#ff8fd0'}>
             <span className="k-small">
               {p === 'sam' ? "🧒 Sam's drawer" : "👧 Mia's drawer"}
@@ -251,7 +254,7 @@ function StickyNotes() {
         </At>
       ))}
       {noteAt && (
-        <At x={noteAt.x} y={noteAt.y + 1.500} z={4} slow>
+        <At x={noteAt.x} y={noteAt.y + 1.500} p={noteAt.p} z={4} slow>
           <span className="mm-note">Sam loves dinosaurs</span>
         </At>
       )}
@@ -309,13 +312,13 @@ function Whiteboard() {
         </>
       }
     >
-      <At x={16} y={5.500}>
+      <At x={16} y={5.500} p={{ x: 50, y: 5 }}>
         <span className="k-label">Tell Ray</span>
       </At>
       {GROCERIES.map((g, i) => {
         const has = list.includes(g.id);
         return (
-          <At key={g.id} x={16} y={14 + i * 9.600} w={25}>
+          <At key={g.id} x={16} y={14 + i * 9.600} w={25} p={{ x: i % 2 ? 73.500 : 26.500, y: 16 + Math.floor(i / 2) * 11.500, w: 45 }}>
             <button className={`ee-thing${has ? ' is-on' : ''}`} onClick={() => flip(g.id)}>
               <Pic size={1.600}>{g.icon}</Pic>
               <b>
@@ -326,21 +329,21 @@ function Whiteboard() {
         );
       })}
 
-      <At x={48} y={11} w={30} hide={!said}>
+      <At x={48} y={11} w={30} p={{ x: 36, y: 44, w: 66 }} hide={!said}>
         <Bubble who="you" key={said?.you}>
           {said?.you}
         </Bubble>
       </At>
-      <At x={48} y={23} w={30} hide={!said}>
+      <At x={48} y={23} w={30} p={{ x: 38, y: 58, w: 70 }} hide={!said}>
         <Bubble who="ray" tone="ok" key={`${said?.ray}${list.length}`}>
           {said?.ray}
         </Bubble>
       </At>
-      <At x={48} y={42}>
+      <At x={48} y={42} p={{ x: 19, y: 102 }}>
         <MiniRay mood="happy" size={5} />
       </At>
 
-      <At x={82} y={27} w={31}>
+      <At x={82} y={27} w={31} p={{ x: 68, y: 96, w: 56 }}>
         <div className="wb-board">
           <span className="wb-title">Shopping list</span>
           <ul>
@@ -353,7 +356,7 @@ function Whiteboard() {
           </ul>
         </div>
       </At>
-      <At x={82} y={50.500}>
+      <At x={82} y={50.500} p={{ x: 68, y: 125 }}>
         <Tag tone="info">
           {list.length} {list.length === 1 ? 'thing' : 'things'} on the board
         </Tag>
@@ -410,19 +413,19 @@ function Lessons() {
         </>
       }
     >
-      <At x={34} y={6.500} w={40}>
+      <At x={34} y={6.500} w={40} p={{ x: 50, y: 7, w: 70 }}>
         <Bubble who="you">What is a volcano?</Bubble>
       </At>
-      <At x={36} y={28} w={56}>
+      <At x={36} y={28} w={56} p={{ x: 50, y: 40, w: 92 }}>
         <Bubble who="ray" key={answer}>
           <Typed text={answer} cps={90} />
         </Bubble>
       </At>
-      <At x={10} y={47}>
+      <At x={10} y={47} p={{ x: 15, y: 100 }}>
         <MiniRay mood={mood} size={4.200} />
       </At>
 
-      <At x={83} y={28} w={29}>
+      <At x={83} y={28} w={29} p={{ x: 63, y: 96, w: 64 }}>
         <div className="ls-book">
           <span className="wb-title">📓 Lessons</span>
           <ul>
@@ -484,22 +487,22 @@ function Unplug() {
     >
       <div className={`up-dark${phase === 'off' ? ' is-on' : ''}`} />
 
-      <At x={32} y={10} w={40} hide={phase !== 'on' && !kept}>
+      <At x={32} y={10} w={40} p={{ x: 47, y: 11, w: 78 }} hide={phase !== 'on' && !kept}>
         <Bubble who="you">I'm Sam. I love dinosaurs!</Bubble>
       </At>
-      <At x={28} y={20} w={36} hide={phase !== 'on' && !kept}>
+      <At x={28} y={20} w={36} p={{ x: 40, y: 24, w: 66 }} hide={phase !== 'on' && !kept}>
         <Bubble who="ray">Hi Sam! Me too.</Bubble>
       </At>
-      <At x={30} y={31} w={46} hide={phase !== 'back'}>
+      <At x={30} y={31} w={46} p={{ x: 50, y: 42, w: 88 }} hide={phase !== 'back'}>
         <Bubble who="ray" tone={kept ? 'ok' : 'bad'} key={`${storage}`}>
           {kept ? 'Welcome back, Sam! More dinosaurs?' : 'Hello! Who are you?'}
         </Bubble>
       </At>
-      <At x={18} y={44}>
+      <At x={18} y={44} p={{ x: 19, y: 104 }}>
         <MiniRay mood={phase === 'off' ? 'sleep' : lost ? 'think' : 'happy'} size={5} />
       </At>
 
-      <At x={80} y={27} w={28} style={{ opacity: storage ? 1 : 0.3 }}>
+      <At x={80} y={27} w={28} p={{ x: 66, y: 90, w: 60 }} style={{ opacity: storage ? 1 : 0.3 }}>
         <div className={`up-diary${kept ? ' is-read' : ''}`}>
           <span className="wb-title">💾 Diary</span>
           {storage ? (
@@ -514,7 +517,7 @@ function Unplug() {
           )}
         </div>
       </At>
-      <At x={80} y={47}>
+      <At x={80} y={47} p={{ x: 66, y: 120 }}>
         <Tag tone={storage ? 'ok' : 'warn'}>{storage ? 'safe, even when Ray is off' : 'storage is off'}</Tag>
       </At>
     </Scene>

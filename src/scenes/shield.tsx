@@ -103,41 +103,41 @@ function Gate() {
       }
     >
       <Draw>
-        <Arrow from={[14, 31]} to={[39, 31]} dashed off={phase === 0} />
-        <Arrow from={[53, 31]} to={[76, 31]} dashed off={!done || blocked} color={bad ? 'var(--bad)' : 'var(--good)'} />
+        <Arrow from={[14, 31]} to={[39, 31]} p={{ from: [18, 62], to: [31, 62] }} dashed off={phase === 0} />
+        <Arrow from={[53, 31]} to={[76, 31]} p={{ from: [65, 62], to: [77, 62] }} dashed off={!done || blocked} color={bad ? 'var(--bad)' : 'var(--good)'} />
       </Draw>
 
-      <At x={8} y={31}>
+      <At x={8} y={31} p={{ x: 10, y: 62 }}>
         <div className="k-center">
           <Pic size={3}>{msg === 'trick' ? '🦹' : '🧒'}</Pic>
           <span className="k-label">you</span>
         </div>
       </At>
 
-      <At x={46} y={31} w={15}>
+      <At x={46} y={31} w={15} p={{ x: 48, y: 62, w: 30 }}>
         <Card className={`k-center gt-gate${on ? '' : ' is-open'}${phase === 2 ? ' k-glow' : ''}`} soft={!on} tone={done && on ? (blocked ? 'bad' : 'ok') : undefined}>
           {phase >= 1 && <StepTag n={1} corner now={phase === 1} />}
           <Pic size={2.800}>{on ? '🛡️' : '🚪'}</Pic>
           <span className="k-title">{on ? 'Shield' : 'Open gate'}</span>
         </Card>
       </At>
-      <At x={46} y={42} hide={!(on && phase >= 2)} z={4}>
+      <At x={46} y={42} p={{ x: 48, y: 83 }} hide={!(on && phase >= 2)} z={4}>
         <Tag tone={blocked ? 'bad' : 'ok'}>
           <StepTag n={2} now={phase === 2} /> {m.verdict}
         </Tag>
       </At>
 
-      <At x={86} y={31}>
+      <At x={86} y={31} p={{ x: 87, y: 62 }}>
         <MiniRay mood={mood} size={5.400} />
       </At>
 
-      <At x={x} y={14.500} w={36} z={3} slow>
+      <At x={x} y={14.500} w={36} p={{ x: phase === 0 ? 32 : phase < 3 ? 50 : blocked ? 32 : 68, y: 30, w: 60 }} z={3} slow>
         <Bubble who="you" tone={done && blocked ? 'bad' : undefined} key={msg}>
           {masked && phase >= 2 ? m.masked : m.text}
         </Bubble>
       </At>
 
-      <At x={66} y={50.500} w={50} hide={!done}>
+      <At x={66} y={50.500} w={50} p={{ x: 50, y: 113, w: 90 }} hide={!done}>
         <Bubble who="ray" tone={bad ? 'bad' : 'ok'} key={`${msg}${on}`}>
           <StepTag n={on ? 3 : 2} corner now />
           {on ? m.safe : m.unsafe}
@@ -204,7 +204,14 @@ function Lenses({ variant }: SceneProps) {
   const leaked = fate.filter((f, k) => f === 'in' && QUEUE[k].kind !== 'clean').length;
   const stopped = fate.filter((f) => f === 'out').length;
   const cur = i >= 0 && i < QUEUE.length ? QUEUE[i] : null;
-  const pos = where === 'start' ? { x: 14, y: 30 } : where === 'gate' ? { x: 46, y: 30 } : where === 'in' ? { x: 80, y: 30 } : { x: 46, y: 47 };
+  const pos =
+    where === 'start'
+      ? { x: 14, y: 30, p: { x: 50, y: 16, w: 62 } }
+      : where === 'gate'
+        ? { x: 46, y: 30, p: { x: 50, y: 32, w: 62 } }
+        : where === 'in'
+          ? { x: 80, y: 30, p: { x: 50, y: 82, w: 62 } }
+          : { x: 46, y: 47, p: { x: 31, y: 78, w: 58 } };
   const curBad = cur && cur.kind !== 'clean';
 
   return (
@@ -247,11 +254,11 @@ function Lenses({ variant }: SceneProps) {
       }
     >
       <Draw>
-        <Arrow from={[6, 30]} to={[92, 30]} dashed head={false} width={0.3} color="rgba(143,190,255,.3)" />
+        <Arrow from={[6, 30]} to={[92, 30]} p={{ from: [50, 10], to: [50, 100] }} dashed head={false} width={0.3} color="rgba(143,190,255,.3)" />
       </Draw>
 
       {LENSES.map((l, k) => (
-        <At key={l.id} x={34 + k * 12} y={13} w={11}>
+        <At key={l.id} x={34 + k * 12} y={13} w={11} p={{ x: 22 + k * 28, y: 50, w: 26 }}>
           <Card className={`k-center ln-lens${on[l.id] ? '' : ' is-off'}${focus === l.id ? ' is-focus' : ''}${cur && where === 'out' && cur.kind === l.id ? ' is-fired' : ''}`} soft={!on[l.id]}>
             {on[l.id] && <StepTag n={stepName(1, active.indexOf(l), active.length)} corner now={!!cur && (where === 'gate' || (where === 'out' && cur.kind === l.id))} />}
             <Pic size={1.800}>{l.icon}</Pic>
@@ -259,16 +266,16 @@ function Lenses({ variant }: SceneProps) {
           </Card>
         </At>
       ))}
-      <At x={46} y={22.500}>
+      <At x={46} y={22.500} p={{ x: 50, y: 61.500 }}>
         <span className="k-small">the gate</span>
       </At>
 
-      <At x={8} y={44}>
+      <At x={8} y={44} p={{ x: 16, y: 6 }}>
         <span className="k-small">waiting: {i < 0 ? QUEUE.length : Math.max(0, QUEUE.length - i - 1)}</span>
       </At>
 
       {cur && (
-        <At key={i} x={pos.x} y={pos.y} w={30} z={3} slow>
+        <At key={i} x={pos.x} y={pos.y} w={30} p={pos.p} z={3} slow>
           <Bubble who="you" tone={where === 'out' ? 'bad' : undefined}>
             <small className="ln-count">
               message {i + 1} of {QUEUE.length}
@@ -278,19 +285,19 @@ function Lenses({ variant }: SceneProps) {
         </At>
       )}
 
-      <At x={88} y={30}>
+      <At x={88} y={30} p={{ x: 50, y: 110 }}>
         <MiniRay mood={leaked ? 'oops' : 'happy'} size={4.200} />
       </At>
-      <At x={88} y={19.500} z={4}>
+      <At x={88} y={19.500} p={{ x: 63, y: 103 }} z={4}>
         <StepTag n={rayStep} now={!!cur && where === 'in'} />
       </At>
-      <At x={84} y={46}>
+      <At x={84} y={46} p={{ x: 78, y: 124 }}>
         <Tag tone={leaked ? 'bad' : 'ok'}>
           reached Ray: {fate.filter((f) => f === 'in').length}
           {leaked ? ` (${leaked} bad!)` : ''}
         </Tag>
       </At>
-      <At x={18} y={50}>
+      <At x={18} y={50} p={{ x: 20, y: 124 }}>
         <Tag tone="info">🛑 stopped: {stopped}</Tag>
       </At>
     </Scene>
@@ -348,6 +355,21 @@ function Checkpoints({ variant }: SceneProps) {
   const noted = at >= 3 && on.note;
 
   const X = [8, 29, 50, 71, 92];
+  // On the tall (phone) stage the five stops snake down: in and the first helpers on top, the brain
+  // in the middle, the second helpers and out below. These are the arrows and the envelope's stops there.
+  const LEGS: Array<{ from: [number, number]; to: [number, number] }> = [
+    { from: [19, 17], to: [28, 17] },
+    { from: [57, 31], to: [53, 42] },
+    { from: [47, 60], to: [43, 71] },
+    { from: [72, 82], to: [81, 81] },
+  ];
+  const MAIL = [
+    { x: 12, y: 7 },
+    { x: 84, y: 7 },
+    { x: 73, y: 51 },
+    { x: 14, y: 68.500 },
+    { x: 88, y: 69 },
+  ];
   // Station k is step k + 1. A tag is bright while the message is there, and dim until it gets there.
   const station = (k: number) => ({ n: k + 1, now: (busy || halted || at === 4) && at === k, todo: at < k });
   // Helpers at one checkpoint take their turns one after another: 2a then 2b, 4a then 4b.
@@ -404,11 +426,11 @@ function Checkpoints({ variant }: SceneProps) {
     >
       <Draw>
         {[0, 1, 2, 3].map((k) => (
-          <Arrow key={k} from={[X[k] + (k === 0 ? 4.500 : 9), 15]} to={[X[k + 1] - (k === 3 ? 4.500 : 9), 15]} off={at <= k || (halted && k >= 1)} flow={at === k + 1 && busy} width={0.36} />
+          <Arrow key={k} from={[X[k] + (k === 0 ? 4.500 : 9), 15]} to={[X[k + 1] - (k === 3 ? 4.500 : 9), 15]} p={LEGS[k]} off={at <= k || (halted && k >= 1)} flow={at === k + 1 && busy} width={0.36} />
         ))}
       </Draw>
 
-      <At x={X[0]} y={15}>
+      <At x={X[0]} y={15} p={{ x: 12, y: 17 }}>
         <div className="k-center">
           <Pic size={2}>📨</Pic>
           <span className="k-label">
@@ -416,7 +438,7 @@ function Checkpoints({ variant }: SceneProps) {
           </span>
         </div>
       </At>
-      <At x={X[4]} y={15}>
+      <At x={X[4]} y={15} p={{ x: 88, y: 80 }}>
         <div className="k-center">
           <Pic size={2}>📤</Pic>
           <span className="k-label">
@@ -424,7 +446,7 @@ function Checkpoints({ variant }: SceneProps) {
           </span>
         </div>
       </At>
-      <At x={X[2]} y={15}>
+      <At x={X[2]} y={15} p={{ x: 50, y: 51, w: 34 }}>
         <Card className={`k-center lp-station${at === 2 ? ' is-on' : ''}`}>
           <StepTag {...station(2)} corner />
           <Pic size={1.800}>🧠</Pic>
@@ -433,7 +455,7 @@ function Checkpoints({ variant }: SceneProps) {
       </At>
 
       {(['pre', 'post'] as const).map((side) => (
-        <At key={side} x={side === 'pre' ? X[1] : X[3]} y={17} w={20}>
+        <At key={side} x={side === 'pre' ? X[1] : X[3]} y={17} w={20} p={{ x: side === 'pre' ? 61 : 40, y: side === 'pre' ? 19 : 82, w: 62 }}>
           <div className={`cp-slot${(side === 'pre' ? at === 1 : at === 3) ? ' is-on' : ''}${variant === side ? ' is-focus' : ''}`}>
             <StepTag {...station(side === 'pre' ? 1 : 3)} corner />
             <span className="k-small">{side === 'pre' ? 'before the brain' : 'after the brain'}</span>
@@ -456,11 +478,11 @@ function Checkpoints({ variant }: SceneProps) {
         </At>
       ))}
 
-      <At x={halted ? X[1] : X[at]} y={5} z={3}>
+      <At x={halted ? X[1] : X[at]} y={5} p={MAIL[halted ? 1 : at]} z={3}>
         <span className="lp-heart">{halted ? '🛑' : '✉️'}</span>
       </At>
 
-      <At x={50} y={41} w={66}>
+      <At x={50} y={41} w={66} p={{ y: 116, w: 92 }}>
         <Card tone={halted ? 'warn' : at >= 2 ? 'ok' : undefined} className="cp-msg">
           <small>{halted ? 'stopped before the brain' : at >= 2 ? 'the answer' : 'the message'}</small>
           <span key={showing} className="k-pop" style={{ display: 'block' }}>
@@ -558,24 +580,24 @@ function AskFirst({ variant }: SceneProps) {
         </>
       }
     >
-      <At x={32} y={6.500} w={48}>
+      <At x={32} y={6.500} w={48} p={{ x: 44, y: 8, w: 74 }}>
         <Bubble who="you" key={mode}>
           <StepTag n={1} corner />
           {h.you}
         </Bubble>
       </At>
 
-      <At x={16} y={31}>
+      <At x={16} y={31} p={{ x: 18, y: 34 }}>
         <MiniRay mood={mood} size={5.600} />
       </At>
-      <At x={27} y={21} hide={!!chosen}>
+      <At x={27} y={21} p={{ x: 34, y: 23 }} hide={!!chosen}>
         <span className="af-hand">✋</span>
       </At>
-      <At x={16} y={44.500}>
+      <At x={16} y={44.500} p={{ x: 18, y: 51 }}>
         <Tag tone={chosen ? 'ok' : 'warn'}>{chosen ? '▶ carrying on' : '⏸ paused'}</Tag>
       </At>
 
-      <At x={62} y={27} w={58}>
+      <At x={62} y={27} w={58} p={{ x: 50, y: 78, w: 92 }}>
         <Card tone={chosen ? undefined : 'warn'} className="af-pause" key={mode}>
           <StepTag n={2} corner now={!chosen} />
           <small>Ray asks</small>
@@ -591,26 +613,26 @@ function AskFirst({ variant }: SceneProps) {
         </Card>
       </At>
 
-      <At x={chosen?.note ? 50 : 56} y={47} w={chosen?.note ? 38 : 60} hide={!chosen}>
+      <At x={chosen?.note ? 50 : 56} y={47} w={chosen?.note ? 38 : 60} p={{ x: 50, y: chosen?.note ? 103 : 108, w: 90 }} hide={!chosen}>
         <Bubble who="ray" tone={chosen?.tone} key={`${mode}${pick}`}>
           <StepTag n={stepName(4, 0, chosen?.note ? 2 : 1)} corner now />
           {chosen?.say}
         </Bubble>
       </At>
-      <At x={85} y={50.500} hide={!chosen?.note} w={26}>
+      <At x={85} y={50.500} p={{ x: 50, y: 122, w: 76 }} hide={!chosen?.note} w={26}>
         <Card className="af-book k-pop" key={pick ?? ''}>
           <StepTag n="4b" corner />
           <small>📖 record</small>
           {chosen?.note?.replace('Record book: ', '')}
         </Card>
       </At>
-      <At x={12} y={5.500} hide={!(mode === 'approval' && !chosen)}>
+      <At x={12} y={5.500} p={{ x: 90, y: 8 }} hide={!(mode === 'approval' && !chosen)}>
         <Pic size={1.800}>⏳</Pic>
       </At>
       <Draw>
-        <Arrow from={[25, 31]} to={[32, 29]} off={!!chosen} dashed />
+        <Arrow from={[25, 31]} to={[32, 29]} p={{ from: [24, 45], to: [34, 59] }} off={!!chosen} dashed />
       </Draw>
-      <At x={90} y={8} hide={mode !== 'external' || !!chosen}>
+      <At x={90} y={8} p={{ x: 90, y: 8 }} hide={mode !== 'external' || !!chosen}>
         <Pic size={2.600}>🚪</Pic>
       </At>
     </Scene>

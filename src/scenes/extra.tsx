@@ -1,24 +1,25 @@
 import { useState } from 'react';
 import { useRunner } from '../lib/hooks';
-import { At, Btn, Bubble, Card, Choice, Draw, MiniRay, Pic, Scene, StepTag, Tag, Toggle, type P2 } from './kit';
+import { At, Btn, Bubble, Card, Choice, Draw, MiniRay, Note, Pic, Scene, StepTag, Tag, Toggle, usePortrait, type P2 } from './kit';
 import { register } from './registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Knowledge graph: facts joined by threads. Ray walks from one to the next.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const DOTS: Record<string, { icon: string; name: string; at: P2 }> = {
-  mia: { icon: '🧒', name: 'Mia', at: [10, 31] },
-  lee: { icon: '👨‍🏫', name: 'Mr Lee', at: [31, 15] },
-  class: { icon: '🏫', name: 'Class 2B', at: [31, 46] },
-  bo: { icon: '🐶', name: 'Bo', at: [54, 15] },
-  park: { icon: '🌳', name: 'The park', at: [54, 46] },
+// `at` is the place on the wide stage, `tall` the place on the tall (phone) stage.
+const DOTS: Record<string, { icon: string; name: string; at: P2; tall: P2 }> = {
+  mia: { icon: '🧒', name: 'Mia', at: [10, 31], tall: [14, 59] },
+  lee: { icon: '👨‍🏫', name: 'Mr Lee', at: [31, 15], tall: [46, 32] },
+  class: { icon: '🏫', name: 'Class 2B', at: [31, 46], tall: [46, 86] },
+  bo: { icon: '🐶', name: 'Bo', at: [54, 15], tall: [82, 32] },
+  park: { icon: '🌳', name: 'The park', at: [54, 46], tall: [82, 86] },
 };
-const THREADS: Array<{ a: string; b: string; label: string; at: P2 }> = [
-  { a: 'mia', b: 'lee', label: 'is taught by', at: [14.500, 20.500] },
-  { a: 'mia', b: 'class', label: 'is in', at: [17, 42.500] },
-  { a: 'lee', b: 'bo', label: 'owns', at: [42.500, 12.800] },
-  { a: 'bo', b: 'park', label: 'walks in', at: [59.500, 31] },
+const THREADS: Array<{ a: string; b: string; label: string; at: P2; tall: P2; side?: 'start' | 'end' }> = [
+  { a: 'mia', b: 'lee', label: 'is taught by', at: [14.500, 20.500], tall: [26, 41], side: 'end' },
+  { a: 'mia', b: 'class', label: 'is in', at: [17, 42.500], tall: [26, 78], side: 'end' },
+  { a: 'lee', b: 'bo', label: 'owns', at: [42.500, 12.800], tall: [64, 29] },
+  { a: 'bo', b: 'park', label: 'walks in', at: [59.500, 31], tall: [79, 60], side: 'end' },
 ];
 type GraphQ = 'dog' | 'walk';
 const GRAPH_Q: Record<GraphQ, { chip: string; ask: string; path: string[]; answer: string }> = {
@@ -27,6 +28,7 @@ const GRAPH_Q: Record<GraphQ, { chip: string; ask: string; path: string[]; answe
 };
 
 function Graph() {
+  const tall = usePortrait();
   const [q, setQ] = useState<GraphQ>('dog');
   const [threads, setThreads] = useState(true);
   const [hop, setHop] = useState(-1);
@@ -102,21 +104,21 @@ function Graph() {
     >
       <Draw>
         {THREADS.map((t) => {
-          const a = DOTS[t.a].at;
-          const b = DOTS[t.b].at;
+          const a = tall ? DOTS[t.a].tall : DOTS[t.a].at;
+          const b = tall ? DOTS[t.b].tall : DOTS[t.b].at;
           const on = lit(t);
           return (
             <g key={t.a + t.b} opacity={threads ? 1 : 0.06}>
               <line className={`gr-thread${on ? ' is-on' : ''}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} />
-              <text x={t.at[0]} y={t.at[1]} textAnchor="middle" fontSize="1.500" opacity={on ? 1 : 0.6}>
+              <Note at={t.at} p={t.tall} anchor={tall ? (t.side ?? 'middle') : 'middle'} size={1.500} opacity={on ? 1 : 0.6}>
                 {t.label}
-              </text>
+              </Note>
             </g>
           );
         })}
       </Draw>
       {Object.entries(DOTS).map(([id, d]) => (
-        <At key={id} x={d.at[0]} y={d.at[1]} z={2}>
+        <At key={id} x={d.at[0]} y={d.at[1]} p={{ x: d.tall[0], y: d.tall[1] }} z={2}>
           <div className={`gr-dot${visited(id) ? ' is-on' : ''}`}>
             {threads && visited(id) && <StepTag n={g.path.indexOf(id) + 1} corner now={g.path[hop] === id} />}
             <Pic size={1.900}>{d.icon}</Pic>
@@ -125,15 +127,15 @@ function Graph() {
         </At>
       ))}
 
-      <At x={82} y={7} w={32}>
+      <At x={82} y={7} w={32} p={{ x: 50, y: 8, w: 90 }}>
         <Bubble who="you" key={q}>
           {g.ask}
         </Bubble>
       </At>
-      <At x={84} y={43}>
+      <At x={84} y={43} p={{ x: 14, y: 110 }}>
         <MiniRay mood={hop < 0 ? 'happy' : !threads ? 'sad' : done ? 'happy' : 'think'} size={4.600} />
       </At>
-      <At x={82} y={26} w={32} hide={!(done || (!threads && hop > 0))}>
+      <At x={82} y={26} w={32} p={{ x: 59, y: 110, w: 74 }} hide={!(done || (!threads && hop > 0))}>
         <Bubble who="ray" tone={threads ? 'ok' : 'bad'} key={`${q}${threads}`}>
           {threads && <StepTag n={g.path.length + 1} corner now />}
           {threads ? g.answer : 'I found Mia. I found the answer page too. But I cannot tell how they are linked.'}
@@ -251,19 +253,19 @@ function GradePages() {
         </>
       }
     >
-      <At x={32} y={7} w={50}>
+      <At x={32} y={7} w={50} p={{ x: 50, y: 8, w: 88 }}>
         <Bubble who="you" key={q}>
           {g.ask}
         </Bubble>
       </At>
-      <At x={12} y={34}>
+      <At x={12} y={34} p={{ x: 14, y: 108 }}>
         <MiniRay mood={done ? (grading ? 'happy' : 'oops') : phase >= 2 ? 'think' : 'happy'} size={5} />
       </At>
 
       {g.pages.map(([text, ok], i) => {
         const graded = grading && phase >= 2;
         return (
-          <At key={`${q}${i}`} x={46} y={19 + i * 8} w={40} hide={phase < 1} delay={phase === 1 ? i * 150 : 0}>
+          <At key={`${q}${i}`} x={46} y={19 + i * 8} w={40} p={{ x: 50, y: 37 + i * 12.500, w: 88 }} hide={phase < 1} delay={phase === 1 ? i * 150 : 0}>
             <div className={`sm-doc gp-page${graded ? (ok ? ' is-good' : ' is-bad') : ''}`}>
               <b>{graded ? (ok ? '✓' : '✕') : '?'}</b>
               <span>{text}</span>
@@ -271,23 +273,23 @@ function GradePages() {
           </At>
         );
       })}
-      <At x={26} y={16.200} z={4} hide={phase < 1}>
+      <At x={26} y={16.200} p={{ x: 7, y: 29.500 }} z={4} hide={phase < 1}>
         <StepTag n={1} now={phase === 1} />
       </At>
-      <At x={46} y={44} w={40} hide={!(grading && g.web && phase >= 3)}>
+      <At x={46} y={44} w={40} p={{ x: 50, y: 77, w: 88 }} hide={!(grading && g.web && phase >= 3)}>
         <div className="sm-doc gp-page is-good">
           <StepTag n={3} corner now={phase === 3} />
           <b>✓</b>
           <span>{g.web}</span>
         </div>
       </At>
-      <At x={82} y={19}>
+      <At x={82} y={19} p={{ x: 52, y: 23 }}>
         <span className="k-small">
           {grading && phase >= 2 && <StepTag n={2} now={phase === 2} />} {grading ? 'checked first' : 'used as they come'}
         </span>
       </At>
 
-      <At x={82} y={34} w={30} hide={!done}>
+      <At x={82} y={34} w={30} p={{ x: 59, y: 108, w: 74 }} hide={!done}>
         <Bubble who="ray" tone={grading ? 'ok' : g.carelessTone} key={`${q}${grading}`}>
           <StepTag n={answerStep} corner now />
           {grading ? g.careful : g.careless}
@@ -344,14 +346,14 @@ function GlassBox() {
         </>
       }
     >
-      <At x={30} y={7} w={44}>
+      <At x={30} y={7} w={44} p={{ x: 50, y: 8, w: 84 }}>
         <Bubble who="you">Book a table for dinner tonight.</Bubble>
       </At>
-      <At x={13} y={34}>
+      <At x={13} y={34} p={{ x: 50, y: 116 }}>
         <MiniRay mood={undone ? 'wink' : 'happy'} size={5.200} />
       </At>
 
-      <At x={52} y={30} w={50}>
+      <At x={52} y={30} w={50} p={{ x: 50, y: 68, w: 90 }}>
         <Card className="gb-box" tone={show && steer ? 'ok' : undefined}>
           <span className="k-title">{undone ? '↩ Booking cancelled. Nothing was charged.' : '✅ Done. Your table is booked.'}</span>
           {show && !undone && (
@@ -380,7 +382,7 @@ function GlassBox() {
         </Card>
       </At>
 
-      <At x={88} y={26}>
+      <At x={88} y={26} p={{ x: 50, y: 23 }}>
         <div className="k-center">
           <span className="k-small">trust</span>
           <span className="gb-hearts">
@@ -401,6 +403,8 @@ function GlassBox() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function Receipts() {
+  // On the tall (phone) stage the three receipts hang one under the other.
+  const tall = usePortrait();
   const [tampered, setTampered] = useState(false);
   const [checked, setChecked] = useState(false);
   const slips = ['Read order 42', tampered ? 'Refund $200' : 'Refund $20', 'Email the customer'];
@@ -437,14 +441,18 @@ function Receipts() {
     >
       <Draw>
         {[0, 1].map((i) => (
-          <line key={i} className={`rc-link${broken(i + 1) ? ' is-broken' : checked ? ' is-ok' : ''}`} x1={27 + i * 30} y1={27} x2={43 + i * 30} y2={27} />
+          <line
+            key={i}
+            className={`rc-link${broken(i + 1) ? ' is-broken' : checked ? ' is-ok' : ''}`}
+            {...(tall ? { x1: 57, y1: 42.500 + i * 31, x2: 57, y2: 47.500 + i * 31 } : { x1: 27 + i * 30, y1: 27, x2: 43 + i * 30, y2: 27 })}
+          />
         ))}
       </Draw>
-      <At x={50} y={7}>
+      <At x={50} y={7} p={{ y: 6 }}>
         <span className="k-label">Ray's receipts, in order</span>
       </At>
       {slips.map((text, i) => (
-        <At key={i} x={20 + i * 30} y={27} w={24}>
+        <At key={i} x={20 + i * 30} y={27} w={24} p={{ x: 57, y: 29 + i * 31, w: 62 }}>
           <div className={`rc-slip${broken(i) ? ' is-broken' : checked ? ' is-ok' : ''}${i === 1 && tampered ? ' is-changed' : ''}`}>
             <StepTag n={i + 1} corner />
             <small>receipt</small>
@@ -456,10 +464,10 @@ function Receipts() {
           </div>
         </At>
       ))}
-      <At x={12} y={49}>
+      <At x={12} y={49} p={{ x: 13, y: 60 }}>
         <MiniRay mood={checked ? (tampered ? 'wow' : 'happy') : 'happy'} size={3.800} />
       </At>
-      <At x={50} y={49} hide={!checked}>
+      <At x={50} y={49} p={{ y: 121 }} hide={!checked}>
         <Tag tone={tampered ? 'bad' : 'ok'}>{tampered ? 'somebody changed receipt 2' : 'nothing was changed'}</Tag>
       </At>
     </Scene>
@@ -488,15 +496,15 @@ function Thumbs() {
   const upA = THUMBS_A.slice(0, n).filter(Boolean).length;
   const upB = THUMBS_B.slice(0, n).filter(Boolean).length;
 
-  const row = (label: string, sub: string, marks: number[], y: number, up: number, win: boolean) => (
+  const row = (label: string, sub: string, marks: number[], y: number, up: number, win: boolean, ty: number) => (
     <>
-      <At x={14} y={y} w={22}>
+      <At x={14} y={y} w={22} p={{ x: 30, y: ty, w: 54 }}>
         <div className="k-center">
           <span className="k-title">{label}</span>
           <span className="k-small">{sub}</span>
         </div>
       </At>
-      <At x={55} y={y} w={56}>
+      <At x={55} y={y} w={56} p={{ x: 50, y: ty + 14, w: 92 }}>
         <div className={`th-row${done && win ? ' is-win' : ''}`}>
           {marks.map((m, i) => (
             <span key={i} className={i < n ? 'k-pop' : 'is-empty'}>
@@ -505,7 +513,7 @@ function Thumbs() {
           ))}
         </div>
       </At>
-      <At x={91} y={y}>
+      <At x={91} y={y} p={{ x: 84, y: ty }}>
         <Tag tone={done ? (win ? 'ok' : 'warn') : 'info'}>{up} 👍</Tag>
       </At>
     </>
@@ -527,12 +535,12 @@ function Thumbs() {
         </Btn>
       }
     >
-      <At x={50} y={7}>
+      <At x={50} y={7} p={{ y: 8 }}>
         <span className="k-label">Ten visitors each. Who makes people happier?</span>
       </At>
-      {row('Ray A', 'the one we have', THUMBS_A, 20, upA, false)}
-      {row('Ray B', 'with a better job card', THUMBS_B, 37, upB, true)}
-      <At x={50} y={50} hide={!done}>
+      {row('Ray A', 'the one we have', THUMBS_A, 20, upA, false, 28)}
+      {row('Ray B', 'with a better job card', THUMBS_B, 37, upB, true, 68)}
+      <At x={50} y={50} p={{ y: 107 }} hide={!done}>
         <Tag tone="ok">🏆 Ray B wins, 9 to 6</Tag>
       </At>
     </Scene>
@@ -575,14 +583,14 @@ function Piggy() {
         </>
       }
     >
-      <At x={20} y={26}>
+      <At x={20} y={26} p={{ x: 24, y: 23 }}>
         <div className="k-center">
           <Pic size={4.400}>🐷</Pic>
           <span className="k-title">{coins} coins</span>
           <span className="k-small">for 100 questions</span>
         </div>
       </At>
-      <At x={52} y={22} w={36}>
+      <At x={52} y={22} w={36} p={{ x: 50, y: 60, w: 70 }}>
         <div className="pg-coins">
           {Array.from({ length: 10 }, (_, i) => (
             <span key={i} className={i < coins ? '' : 'is-saved'} />
@@ -590,16 +598,16 @@ function Piggy() {
         </div>
       </At>
       {SAVERS.map((s, i) => (
-        <At key={s.id} x={52} y={35 + i * 6} w={40} hide={!on[s.id]}>
+        <At key={s.id} x={52} y={35 + i * 6} w={40} p={{ x: 50, y: 86 + i * 12, w: 90 }} hide={!on[s.id]}>
           <div className="pg-how">
             <b>−{s.saves}</b> {s.how}
           </div>
         </At>
       ))}
-      <At x={86} y={24}>
+      <At x={86} y={24} p={{ x: 76, y: 22 }}>
         <MiniRay mood={count === 3 ? 'happy' : 'wink'} size={4.600} />
       </At>
-      <At x={86} y={40}>
+      <At x={86} y={40} p={{ x: 76, y: 39 }}>
         <Tag tone="ok">still passes its test ✓</Tag>
       </At>
     </Scene>

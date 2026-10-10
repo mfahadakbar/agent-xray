@@ -12,6 +12,8 @@ export function Atlas({ open, onClose, onGo, current }: { open: boolean; onClose
   useEffect(() => {
     if (open) {
       setQ('');
+      // On a touch screen, focusing the search box would bring up the keyboard and cover half the map.
+      if (window.matchMedia('(pointer: coarse)').matches) return;
       // Wait for the overlay to be on screen before focusing.
       const id = setTimeout(() => input.current?.focus(), 60);
       return () => clearTimeout(id);
@@ -49,7 +51,7 @@ export function Atlas({ open, onClose, onGo, current }: { open: boolean; onClose
           <div>
             <h2>The whole map</h2>
             <p>
-              Every part of an agent, in one place. {ALL.length} boxes. Click one to jump there.
+              Every part of an agent, in one place. {ALL.length} boxes. Pick one to jump there.
             </p>
           </div>
           <div className="atlas-search">

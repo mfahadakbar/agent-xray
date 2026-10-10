@@ -92,7 +92,7 @@ interface RunState {
 }
 
 /** The glowing message that travels along Ray's wiring. It owns its own animation frame loop. */
-function Packet({ pts, ms, cargo, n, tone, moving, onArrive }: { pts: Pt[]; ms: number; cargo: string; n?: number; tone?: Tone; moving: boolean; onArrive(): void }) {
+function Packet({ pts, ms, cargo, n, tone, moving, big = 1, onArrive }: { pts: Pt[]; ms: number; cargo: string; n?: number; tone?: Tone; moving: boolean; big?: number; onArrive(): void }) {
   const [pos, setPos] = useState<Pt>(moving ? pts[0] : pts[pts.length - 1]);
   const arrive = useRef(onArrive);
   arrive.current = onArrive;
@@ -122,7 +122,7 @@ function Packet({ pts, ms, cargo, n, tone, moving, onArrive }: { pts: Pt[]; ms: 
   }, [moving]);
 
   return (
-    <g className={`packet tone-${tone ?? 'info'}`} transform={`translate(${pos[0]} ${pos[1]})`}>
+    <g className={`packet tone-${tone ?? 'info'}`} transform={`translate(${pos[0]} ${pos[1]}) scale(${big})`}>
       <circle r="27" className="packet-halo" />
       <circle r="19" className="packet-core" />
       <text y="7" textAnchor="middle" fontSize="20">
@@ -223,6 +223,56 @@ function PartLabel({
   );
 }
 
+/**
+ * On a narrow screen there is no room beside Ray for the big labels. Each part gets a small name tag
+ * right next to it instead: `at` is the middle of the tag, `to` is where its line touches the part (Ray units).
+ */
+const PILL: Record<OrganId, { at: Pt; to: Pt }> = {
+  brain: { at: [76, 72], to: [236, 100] },
+  senses: { at: [520, 228], to: [410, 205] },
+  heart: { at: [72, 280], to: [262, 338] },
+  shield: { at: [79, 342], to: [98, 380] },
+  hands: { at: [524, 345], to: [515, 388] },
+  memory: { at: [459, 516], to: [352, 468] },
+  steps: { at: [172, 529], to: [222, 548] },
+  checkup: { at: [94, 678], to: [64, 634] },
+  home: { at: [377, 698], to: [377, 664] },
+  friends: { at: [513, 672], to: [540, 642] },
+};
+const PILL_H = 42;
+/** Where a message from you starts on a narrow screen (Ray units): inside the picture, under the question. */
+const YOU_NARROW: Pt = [40, 34];
+
+function PartPill({ id, shown, onPick }: { id: OrganId; shown: boolean; onPick(id: OrganId): void }) {
+  const organ = ORGAN[id];
+  const { at, to } = PILL[id];
+  const w = 30 + organ.title.length * 14.800;
+  const x0 = at[0] - w / 2;
+  const y0 = at[1] - PILL_H / 2;
+  // The line leaves the tag at the point of its edge that is nearest to the part.
+  const from: Pt = [Math.max(x0, Math.min(x0 + w, to[0])), Math.max(y0, Math.min(y0 + PILL_H, to[1]))];
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onPick(id);
+    }
+  };
+  return (
+    <g className={`part pill${shown ? ' is-shown' : ''}`} style={{ '--c': organ.color } as CSSProperties}>
+      <path className="part-line" pathLength={1} d={`M${from[0]} ${from[1]}L${to[0]} ${to[1]}`} />
+      <circle className="part-dot" cx={to[0]} cy={to[1]} r="5" />
+      <g className="part-box" transform={`translate(${x0} ${y0})`} role="button" tabIndex={shown ? 0 : -1} aria-label={`${organ.title}: ${organ.aka}. ${organ.tagline}`} onClick={() => onPick(id)} onKeyDown={onKey}>
+        {/* a bigger, unseen target around the tag, so a thumb does not miss it */}
+        <rect x={-8} y={-13} width={w + 16} height={PILL_H + 26} fill="transparent" />
+        <rect className="part-bg" width={w} height={PILL_H} rx={PILL_H / 2} />
+        <text className="pill-title" x={w / 2} y={29.500} textAnchor="middle">
+          {organ.title}
+        </text>
+      </g>
+    </g>
+  );
+}
+
 function FlowCard({ slot, card, wide, n }: { slot: Slot | 'ask'; card: Card; wide: boolean; n?: number }) {
   const at = CARD_AT[slot];
   const style = wide
@@ -306,7 +356,20 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
     const ctm = svg?.getScreenCTM();
     if (!svg || !ctm) return;
     const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
-    setLens({ x: p.x - ox, y: p.y });
+    if (e.pointerType === 'mouse') return setLens({ x: p.x - ox, y: p.y });
+    // Under a finger the little window could not be seen, so it sits just above the fingertip.
+    // And it stays on Ray: a touch near the edge still shows something worth seeing.
+    setLens({ x: Math.max(110, Math.min(490, p.x - ox)), y: Math.max(96, Math.min(600, p.y - 104)) });
+  };
+  // A finger: the window follows it wherever it goes, and stays where the finger left it.
+  // (A held finger always drifts a little. The window must not vanish because of that.)
+  const onPointerDown = (e: PointerEvent<SVGSVGElement>) => {
+    if (mode === 'skin' && e.pointerType !== 'mouse') e.currentTarget.setPointerCapture?.(e.pointerId);
+    onPointerMove(e);
+  };
+  // A mouse: the window goes away when the pointer leaves Ray.
+  const onPointerLeave = (e: PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'mouse') setLens(null);
   };
 
   // ── The playground: a message, or a whole job, travels through Ray. ────────────────────────────
@@ -315,10 +378,23 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
   const beat = run && flow ? flow.beats[Math.min(run.idx, flow.beats.length - 1)] : null;
   const finished = !!(run && flow && run.idx >= flow.beats.length - 1 && run.arrived);
 
-  const begin = (scenario: Scenario, sw: Switches = { memory: true, hands: true, shield: true }) =>
+  // On a narrow screen the buttons are under Ray. A story starts with Ray at the top of the screen.
+  const homeRef = useRef<HTMLElement>(null);
+  const toRay = () => {
+    if (wide) return;
+    // After this render: by then the story's own layout is on the page.
+    requestAnimationFrame(() => window.scrollTo({ top: homeRef.current?.offsetTop ?? 0, behavior: reduced ? 'auto' : 'smooth' }));
+  };
+  const begin = (scenario: Scenario, sw: Switches = { memory: true, hands: true, shield: true }) => {
     setRun((r) => ({ job: null, scenario, sw, idx: 0, arrived: false, playing: true, nonce: (r?.nonce ?? 0) + 1 }));
-  const beginJob = (id: string) =>
+    toRay();
+  };
+  const beginJob = (id: string) => {
     setRun((r) => ({ job: id, scenario: 'weather', sw: { memory: true, hands: true, shield: true }, idx: 0, arrived: false, playing: true, nonce: (r?.nonce ?? 0) + 1 }));
+    toRay();
+  };
+  /** Jump straight to one stop of the story (the numbered buttons on a narrow screen). */
+  const jumpTo = (idx: number) => setRun((r) => (r ? { ...r, idx, arrived: true, playing: false } : r));
 
   const arrive = useCallback(() => setRun((r) => (r ? { ...r, arrived: true } : r)), []);
 
@@ -345,6 +421,9 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
     if (!run || !flow || !beat) return null;
     const from: Stop = beat.from ?? (run.idx === 0 ? (flow.from ?? 'you') : flow.beats[run.idx - 1].to);
     const pts = route(from, beat.to).map(([x, y]) => [x + ox, y] as Pt);
+    // "You" stand to the left of Ray. On a narrow screen that would be off the edge of the screen,
+    // so there the message starts in the top corner of the picture, right under the question.
+    if (!wide && from === 'you') pts[0] = YOU_NARROW;
     const len = pathLength(pts);
     return { pts, ms: len === 0 ? 0 : Math.max(450, Math.min(1500, len * 2.300)) };
   }, [run?.idx, run?.nonce, flow, beat, ox]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -371,6 +450,20 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
   }, [run, flow]);
 
   const off = run && !job ? { memory: !run.sw.memory, hands: !run.sw.hands, shield: !run.sw.shield } : {};
+  // On a narrow screen Ray is small, so the travelling message and its numbered footprints are drawn bigger,
+  // two to a row instead of three, so a row never runs off the edge of the picture.
+  const big = wide ? 1 : 1.450;
+  const perRow = wide ? PRINT_ROW : 2;
+  // What the part at this stop says. On a narrow screen it is shown under the caption, not beside Ray.
+  // The last stop of a story says nothing new, so Ray's answer is shown there once more.
+  const said: Array<[Slot, Card]> =
+    !wide && run && run.arrived
+      ? beat?.set
+        ? (Object.entries(beat.set) as Array<[Slot, Card]>)
+        : finished && cards.senses
+          ? [['senses', cards.senses]]
+          : []
+      : [];
   const activeOrgan = run && run.arrived ? (beat?.organ ?? null) : null;
   // Opening a part zooms the camera into it first, so it feels like going inside.
   const pick = (id: OrganId) => {
@@ -426,8 +519,15 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
   );
 
   return (
-    <main className={`home home-${mode}${run ? ' is-running' : ''}${job ? ' is-job' : ''}${dive ? ' is-diving' : ''}`}>
-      {!wide && mode === 'skin' && <IntroCopy onScan={() => setXray(true)} />}
+    <main ref={homeRef} className={`home home-${mode}${run ? ' is-running' : ''}${job ? ' is-job' : ''}${dive ? ' is-diving' : ''}`}>
+      {!wide && mode === 'skin' && <IntroCopy part="top" />}
+      {/* on a narrow screen: what was asked stays in view above Ray while the story plays */}
+      {!wide && run && flow && (
+        <p className="asked">
+          <b>{job ? `${job.icon} ${job.name}` : 'You'}</b>
+          {flow.question}
+        </p>
+      )}
 
       <div className="chart-wrap">
         <div className="chart" style={{ aspectRatio: `${chartW} / ${CHART_H}`, ...diveStyle }}>
@@ -438,8 +538,9 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
             role="group"
             aria-label="An X-ray of Ray, an AI agent, with its ten parts"
             onPointerMove={onPointerMove}
-            onPointerDown={onPointerMove}
-            onPointerLeave={() => setLens(null)}
+            onPointerDown={onPointerDown}
+            onPointerLeave={onPointerLeave}
+            onContextMenu={(e) => mode === 'skin' && e.preventDefault()}
           >
             <defs>
               <linearGradient id="scan-grad" x1="0" y1="0" x2="0" y2="1">
@@ -465,6 +566,9 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
                 return <path key={slot} className="tie" d={`M${edge} ${at.y * 12}L${at.pin[0] + ox} ${at.pin[1]}`} />;
               })}
 
+            {/* on a narrow screen: a small name tag next to every part */}
+            {!wide && ORGANS.map((o) => <PartPill key={o.id} id={o.id} shown={labelShown(o.id)} onPick={pick} />)}
+
             <g transform={`translate(${ox} 0)`}>
               <Ray mode={mode} scanY={scanY} lens={lens} hover={hover} active={activeOrgan} lit={lit} off={off} quiet={!!run} onHover={run ? undefined : setHover} onPick={pick} />
             </g>
@@ -479,7 +583,7 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
             {run && leg && beat && (
               <>
                 <path className="leg" d={leg.pts.map((p, i) => `${i ? 'L' : 'M'}${p[0]} ${p[1]}`).join(' ')} />
-                <Packet key={`${run.nonce}:${run.idx}`} pts={leg.pts} ms={reduced ? 0 : leg.ms} cargo={beat.cargo} n={beat.organ ? run.idx + 1 : undefined} tone={beat.tone} moving={!run.arrived} onArrive={arrive} />
+                <Packet key={`${run.nonce}:${run.idx}`} pts={leg.pts} ms={reduced ? 0 : leg.ms} cargo={beat.cargo} n={beat.organ ? run.idx + 1 : undefined} tone={beat.tone} moving={!run.arrived} big={big} onArrive={arrive} />
               </>
             )}
 
@@ -492,7 +596,7 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
                     key={`${run.nonce}:${p.n}`}
                     className={`print${p.now ? ' is-now' : ''}`}
                     style={{ '--c': ORGAN[p.organ].color } as CSSProperties}
-                    transform={`translate(${px + (p.k % PRINT_ROW) * PRINT_STEP + ox} ${py + Math.floor(p.k / PRINT_ROW) * PRINT_STEP})`}
+                    transform={`translate(${px + (p.k % perRow) * PRINT_STEP * big + ox} ${py + Math.floor(p.k / perRow) * PRINT_STEP * big}) scale(${big})`}
                   >
                     <g className="print-pop">
                       <circle r="13.500" />
@@ -522,6 +626,7 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
       </div>
 
       <div className="deck">
+        {!wide && mode === 'skin' && <IntroCopy part="bottom" onScan={() => setXray(true)} />}
         {mode === 'scan' && <p className="deck-line">Scanning… look what is inside!</p>}
 
         {mode === 'xray' && !run && (
@@ -533,7 +638,7 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
                 </>
               ) : (
                 <>
-                  <b>This is the inside of an AI agent.</b> Click any part to look inside. Or try one of these:
+                  <b>This is the inside of an AI agent.</b> {wide ? 'Click' : 'Tap'} any part to look inside. Or try one of these:
                 </>
               )}
             </p>
@@ -578,6 +683,23 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
 
         {run && flow && beat && (
           <div className={`console${job ? ' is-job' : ''}`}>
+            {!wide && (
+              <ol className="rail" aria-label="The stops of this story">
+                {flow.beats.map((b, i) => (
+                  <li key={i}>
+                    <button
+                      className={i === run.idx ? 'is-now' : i < run.idx ? 'is-done' : ''}
+                      style={{ '--c': b.organ ? ORGAN[b.organ].color : 'var(--xray)' } as CSSProperties}
+                      onClick={() => jumpTo(i)}
+                      aria-label={`Go to stop ${i + 1}`}
+                      aria-current={i === run.idx ? 'step' : undefined}
+                    >
+                      {i + 1}
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            )}
             <div className="console-top">
               <div className={`console-caption tone-${beat.tone ?? 'info'}`} aria-live="polite">
                 <span className="beat-no">
@@ -587,6 +709,16 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
                 <p>{beat.caption}</p>
               </div>
             </div>
+            {!wide && (
+              <div className="says">
+                {said.map(([slot, card]) => (
+                  <p key={`${run.idx}${slot}`} className={`say tone-${card.tone ?? 'info'}`} style={{ '--c': ORGAN[slot].color } as CSSProperties}>
+                    <b>{card.title}</b>
+                    {card.text}
+                  </p>
+                ))}
+              </div>
+            )}
             <div className="console-row">
               {job ? (
                 <div className="seg" role="group" aria-label="Job">
@@ -643,6 +775,7 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
 
       {!wide && run && flow && (
         <div className="fcard-list">
+          <h2>The story so far</h2>
           {listed.map(([slot, card]) => (
             <FlowCard key={slot} slot={slot} card={card} wide={false} n={cardN(slot)} />
           ))}
@@ -672,19 +805,40 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
   );
 }
 
-function IntroCopy({ onScan, placed = false }: { onScan(): void; placed?: boolean }) {
-  return (
-    <div className={`intro${placed ? ' is-placed' : ''}`}>
+/**
+ * The words of the start page. Beside Ray on a wide screen (`placed`). On a narrow screen they are
+ * in two parts: the question above Ray (`top`), and the button under Ray, where a thumb can reach it (`bottom`).
+ */
+function IntroCopy({ onScan, placed = false, part }: { onScan?(): void; placed?: boolean; part?: 'top' | 'bottom' }) {
+  const head = (
+    <>
       <p className="intro-kicker">Agent Xray</p>
       <h1>
         How does an <span>AI agent</span> really work?
       </h1>
       <p className="intro-lede">You are in the right place. Here we put an agent under the X-ray, and you get to see every single part of it.</p>
+    </>
+  );
+  const go = (
+    <button className="btn btn-xray" onClick={onScan}>
+      <span className="btn-bolt">⚡</span> Turn on the X-ray
+    </button>
+  );
+  if (part === 'top') return <div className="intro is-top">{head}</div>;
+  if (part === 'bottom')
+    return (
+      <div className="intro is-bottom">
+        {go}
+        <p className="intro-ray">
+          This is Ray, our example agent. What is inside Ray is inside every agent. <span className="intro-touch">Touch Ray to peek.</span>
+        </p>
+      </div>
+    );
+  return (
+    <div className={`intro${placed ? ' is-placed' : ''}`}>
+      {head}
       <p className="intro-q">What each part is. Why it matters. Which real tools build it.</p>
-      <button className="btn btn-xray" onClick={onScan}>
-        <span className="btn-bolt">⚡</span> Turn on the X-ray
-      </button>
-      {!placed && <p className="intro-ray">This is Ray, our example agent. What is inside Ray is inside every agent.</p>}
+      {go}
     </div>
   );
 }

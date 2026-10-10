@@ -77,6 +77,10 @@ The X-ray switch at the top right turns it off again and takes you back to the s
 
 ![Build with blocks](docs/low-code.jpg)
 
+**Made for a phone too.** On a phone nothing is cut and nothing has to be zoomed. Every scene stands up to fit the screen, with its caption and its buttons, so the whole picture is in view while it plays. Ray's parts carry name tags you can tap. A story shows its numbered stops, and what each part says, right under Ray.
+
+![Five phone screens: the start page, Ray with name tags, a job story, a team scene and the vector map](docs/phone.jpg)
+
 **Extras**
 
 - **Whole map** (press `/`): all 135 boxes on one screen, with search across parts and tools.
@@ -112,6 +116,9 @@ src/
 scripts/
   shoot.mjs   screenshot one page
   tour.mjs    visit every page and fail on any error
+video/
+  stage.html  the frame around the app in the intro video: headline, screen, where to find it
+  make.mjs    plays the app and records the video
 ```
 
 **Add a box.** Add a node to the right file in `src/data/`. Every node answers the same questions (`simple`, `builder`, `why`, `mind`, `today`, `notYet`) and may list `tools` and `children`.
@@ -122,13 +129,33 @@ scripts/
 
 **Add a scene.** Write a component with the pieces in `src/scenes/kit.tsx`, `register()` it under a name, and put that name in the node's `scene` field. A scene is a 16:9 stage measured in percent, so it looks the same at any size. `name:variant` opens a scene in a given state.
 
+**Make it fit a phone.** On a phone the stage stands up: 3:4 instead of 16:9, with bigger type. Nothing is cut and nothing has to be zoomed. A piece keeps its place from left to right and gets more room from top to bottom. When that is not good enough, give the piece its own place on the tall stage with `p`:
+
+```tsx
+<At x={80} y={30} w={30} p={{ x: 50, y: 110, w: 90 }}>…</At>   // beside Ray when wide, under Ray when tall
+<Arrow from={[30, 26]} to={[66, 24]} p={{ from: [28, 50], to: [58, 47] }} />
+```
+
+The tall stage is 100 units wide and 133.33 tall. A scene with real geometry (a time line, a map) can ask `usePortrait()` and work out its own layout.
+
 **Number the steps.** If a scene shows a process, tag it. Pass `step` to `<Scene>` to show the current step in the caption, and put a `<StepTag n={2} />` on each thing that takes a turn (`corner` pins it to a card, `now` lights the current one, `todo` dims the ones still to come). For actors that take several turns, `tagsFor()` and `<StepTags>` work the numbers out, and `stepName(2, i, size)` gives `2a`, `2b` for things that happen together.
 
 **Check your work.** With `npm run dev` running:
 
 ```bash
-node scripts/tour.mjs      # all 135 pages, no console errors
+node scripts/tour.mjs                    # all 135 pages, no console errors
+PHONE=1 FIT=1 node scripts/tour.mjs      # the same on a phone screen, and nothing may be cut
 ```
+
+`FIT=1` fails a page if a piece sticks out of its stage, if words are clipped by their box, or if the page is wider than the screen. `W` and `H` set the size of the screen.
+
+**Make the intro video.** `video/make.mjs` plays the real app like a person would (it moves a pointer, clicks, drags, moves the camera and changes the headline) and records it. It needs `ffmpeg` and Google Chrome.
+
+```bash
+npm run build && npm run video     # → video/out/agent-xray-linkedin.mp4 (1080 × 1350) and poster.jpg
+```
+
+The shots are a list near the bottom of that file. `FROM=6 UNTIL=7 npm run video` records only shots 6 and 7.
 
 **Put it online.** The website is the `gh-pages` branch, and that branch is just the `dist` folder. After a change: build, commit, push, then
 
@@ -138,6 +165,6 @@ npm run deploy             # sends dist/ to the gh-pages branch
 
 ## Good to know
 
-- Made for a modern desktop browser. It works on phones too. Scenes are easier to see with the phone turned sideways.
+- Made for a modern browser, on a desktop or a phone. Tested in Chrome on a desktop and on an iPhone. Firefox is not tested yet.
 - It respects the "reduce motion" setting.
 - Nothing is sent anywhere. Progress is kept in the browser only.

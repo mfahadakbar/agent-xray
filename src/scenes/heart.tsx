@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRunner, useSteps } from '../lib/hooks';
-import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, Pic, Scene, Slider, StepNav, StepTag, Tag, type P2 } from './kit';
+import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, Note, Pic, Scene, Slider, StepNav, StepTag, Tag, usePortrait, type P2 } from './kit';
 import { register, type SceneProps } from './registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -33,6 +33,8 @@ const TURNS: Tick[][] = [
 
 const ORDER: Station[] = ['think', 'do', 'look'];
 const POS: Record<Station, P2> = { think: [30, 15.500], do: [44, 39.500], look: [16, 39.500] };
+/** The same triangle on the tall (phone) stage: bigger, in the middle, with the notebook under it. */
+const POS_TALL: Record<Station, P2> = { think: [50, 27], do: [78, 60], look: [22, 60] };
 const STATION: Record<Station, { icon: string; name: string }> = {
   think: { icon: '🧠', name: 'Think' },
   do: { icon: '✋', name: 'Do' },
@@ -80,7 +82,9 @@ function Loop({ variant }: SceneProps) {
           : `Turn ${cur.turn}. Look: “${cur.text}” Now around again.`
       : 'Ray works in a loop. Think, do, look. Then again. Press play and watch.';
 
-  const marker: P2 = cur ? POS[cur.at] : ended ? [57, 15.500] : [30, 15.500];
+  const tall = usePortrait();
+  const pos = tall ? POS_TALL : POS;
+  const marker: P2 = cur ? pos[cur.at] : ended ? (tall ? [50, 77] : [57, 15.500]) : pos.think;
 
   return (
     <Scene
@@ -101,18 +105,18 @@ function Loop({ variant }: SceneProps) {
       }
     >
       <Draw>
-        <Arrow from={[35.500, 18]} to={[43, 34]} bend={-4} flow={cur?.at === 'think'} off={cur?.at !== 'think' && !!cur} />
-        <Arrow from={[38, 41]} to={[22, 41]} bend={-3} flow={cur?.at === 'do'} off={cur?.at !== 'do' && !!cur} />
-        <Arrow from={[17, 34]} to={[24.500, 18]} bend={-4} flow={cur?.at === 'look'} off={cur?.at !== 'look' && !!cur} />
-        <Arrow from={[36.500, 14.500]} to={[58, 14.500]} dashed off={!ended} color="var(--good)" />
+        <Arrow from={[35.500, 18]} to={[43, 34]} bend={-4} p={{ from: [59, 31], to: [76, 50] }} flow={cur?.at === 'think'} off={cur?.at !== 'think' && !!cur} />
+        <Arrow from={[38, 41]} to={[22, 41]} bend={-3} p={{ from: [68, 64], to: [32, 64] }} flow={cur?.at === 'do'} off={cur?.at !== 'do' && !!cur} />
+        <Arrow from={[17, 34]} to={[24.500, 18]} bend={-4} p={{ from: [24, 50], to: [41, 31] }} flow={cur?.at === 'look'} off={cur?.at !== 'look' && !!cur} />
+        <Arrow from={[36.500, 14.500]} to={[58, 14.500]} p={{ from: [50, 70], to: [50, 83] }} dashed off={!ended} color="var(--good)" />
       </Draw>
 
-      <At x={30} y={5}>
+      <At x={30} y={5} p={{ x: 50, y: 7 }}>
         <Bubble who="you">Is today a good day for a picnic?</Bubble>
       </At>
 
       {(Object.keys(POS) as Station[]).map((s) => (
-        <At key={s} x={POS[s][0]} y={POS[s][1]}>
+        <At key={s} x={pos[s][0]} y={pos[s][1]} p={{ y: pos[s][1] }}>
           <Card className={`lp-station${cur?.at === s ? ' is-on' : ''}`}>
             <StepTag n={ORDER.indexOf(s) + 1} corner now={cur?.at === s} />
             <Pic size={1.900}>{STATION[s].icon}</Pic>
@@ -122,7 +126,7 @@ function Loop({ variant }: SceneProps) {
       ))}
 
       {/* the middle of the loop shows what is happening right now */}
-      <At x={30} y={30.500} w={21}>
+      <At x={30} y={30.500} w={21} p={{ x: 50, y: 48, w: 36 }}>
         <div className="lp-now" key={t}>
           {cur ? (
             <>
@@ -134,32 +138,32 @@ function Loop({ variant }: SceneProps) {
           )}
         </div>
       </At>
-      <At x={marker[0]} y={marker[1] - 5.200} z={4}>
+      <At x={marker[0]} y={marker[1] - 5.200} z={4} p={{ y: marker[1] - 10 }}>
         <span className="lp-heart">❤️</span>
       </At>
-      <At x={30} y={51.500}>
+      <At x={30} y={51.500} p={{ x: 22, y: 78 }}>
         <Tag tone={ended && limit < 3 ? 'warn' : 'info'}>
           turn {cur ? cur.turn : ended ? Math.min(limit, 3) : 0} of {limit} allowed
         </Tag>
       </At>
 
-      <At x={78} y={12}>
+      <At x={78} y={12} p={{ x: 50, y: 88 }}>
         <span className="k-small">Ray's notebook</span>
       </At>
       {[0, 1].map((i) => (
-        <At key={i} x={78} y={19.500 + i * 7.500} w={36} hide={!found[i]}>
+        <At key={i} x={78} y={19.500 + i * 7.500} w={36} hide={!found[i]} p={{ x: 26.500 + i * 47, y: 98, w: 45 }}>
           <Card>
             <small>turn {i + 1}</small>
             {found[i]?.found ?? TURNS[i][2].found}
           </Card>
         </At>
       ))}
-      <At x={78} y={41} w={38} hide={!ended}>
+      <At x={78} y={41} w={38} hide={!ended} p={{ x: 43, y: 119, w: 80 }}>
         <Bubble who="ray" tone={outcome.tone}>
           {outcome.text}
         </Bubble>
       </At>
-      <At x={93} y={50.500} hide={!ended}>
+      <At x={93} y={50.500} hide={!ended} p={{ x: 92, y: 120 }}>
         <MiniRay mood={outcome.tone === 'ok' ? 'happy' : 'sad'} size={2.600} />
       </At>
     </Scene>
@@ -184,23 +188,33 @@ const STOPS: Array<{ icon: string; name: string; builder: string; caption: strin
 function RunTrack() {
   const s = useSteps(STOPS.length);
   const x = (i: number) => 8 + i * 12;
+  // On the tall (phone) stage the track snakes: four stops across, then four back.
+  // That puts Do right under Think, so the loop between them is easy to see.
+  const tx = (i: number) => (i < 4 ? 14 + i * 24 : 86 - (i - 4) * 24);
+  const ty = (i: number) => (i < 4 ? 32 : 72);
+  const leg = (i: number): { from: P2; to: P2 } =>
+    i === 3
+      ? { from: [82, 43], to: [82, 61] }
+      : i < 3
+        ? { from: [tx(i) + 8.500, 32], to: [tx(i + 1) - 8.500, 32] }
+        : { from: [tx(i) - 8.500, 72], to: [tx(i + 1) + 8.500, 72] };
   return (
     <Scene caption={STOPS[s.i].caption} tone={s.atEnd ? 'ok' : undefined} step={s.i + 1} controls={<StepNav s={s} />}>
       <Draw>
         {STOPS.slice(0, -1).map((_, i) => (
-          <Arrow key={i} from={[x(i) + 4.300, 21]} to={[x(i + 1) - 4.300, 21]} off={i >= s.i} flow={i === s.i - 1} width={0.38} />
+          <Arrow key={i} from={[x(i) + 4.300, 21]} to={[x(i + 1) - 4.300, 21]} p={leg(i)} off={i >= s.i} flow={i === s.i - 1} width={0.38} />
         ))}
         {/* the loop between thinking and doing */}
-        <Arrow from={[x(4), 28]} to={[x(3), 28]} bend={-5} dashed={s.i !== 4} flow={s.i === 4} off={s.i < 3} color="#ff6b6b" />
-        <text x={(x(3) + x(4)) / 2} y={36.500} textAnchor="middle" fontSize="1.700" fill="#ff8f8f" opacity={s.i < 3 ? 0.3 : 1}>
+        <Arrow from={[x(4), 28]} to={[x(3), 28]} bend={-5} p={{ from: [90, 61], to: [90, 43], bend: 4 }} dashed={s.i !== 4} flow={s.i === 4} off={s.i < 3} color="#ff6b6b" />
+        <Note at={[(x(3) + x(4)) / 2, 36.500]} p={[77, 53]} anchor="end" size={1.700} color="#ff8f8f" dim={s.i < 3}>
           the loop
-        </text>
+        </Note>
       </Draw>
-      <At x={50} y={6.500}>
+      <At x={50} y={6.500} p={{ y: 8 }}>
         <span className="k-label">One message. Eight stops.</span>
       </At>
       {STOPS.map((st, i) => (
-        <At key={i} x={x(i)} y={21}>
+        <At key={i} x={x(i)} y={21} p={{ x: tx(i), y: ty(i) }}>
           <button className={`rt-stop${i === s.i ? ' is-on' : i < s.i ? ' is-done' : ''}`} onClick={() => s.go(i)} aria-label={`Stop ${i + 1}: ${st.name}`}>
             <StepTag n={i + 1} corner now={i === s.i} todo={i > s.i} />
             <Pic size={1.700}>{st.icon}</Pic>
@@ -208,10 +222,10 @@ function RunTrack() {
           </button>
         </At>
       ))}
-      <At x={x(s.i)} y={12.500} z={3}>
+      <At x={x(s.i)} y={12.500} z={3} p={{ x: tx(s.i), y: ty(s.i) - 12.500 }}>
         <span className="lp-heart">✉️</span>
       </At>
-      <At x={50} y={46} w={72}>
+      <At x={50} y={46} w={72} p={{ y: 108, w: 90 }}>
         <Card key={s.i} className="k-pop">
           <small>
             stop {s.i + 1} of {STOPS.length} · builders say
@@ -326,15 +340,15 @@ function Retry() {
       }
     >
       <Draw>
-        <Arrow from={[21, 26]} to={[70, 17]} bend={-3} flow={trying && end === 'none' && tries.length < (plan === 'none' ? 1 : 3)} off={!trying || tries.length >= 3} />
-        <Arrow from={[21, 32]} to={[70, 42]} bend={3} flow={trying && tries.length >= 3} off={!(trying && tries.length >= 3) && end !== 'backup'} color="var(--good)" dashed={plan !== 'backup'} />
+        <Arrow from={[21, 26]} to={[70, 17]} bend={-3} p={{ from: [24, 43], to: [42, 24] }} flow={trying && end === 'none' && tries.length < (plan === 'none' ? 1 : 3)} off={!trying || tries.length >= 3} />
+        <Arrow from={[21, 32]} to={[70, 42]} bend={3} p={{ from: [24, 62], to: [42, 82] }} flow={trying && tries.length >= 3} off={!(trying && tries.length >= 3) && end !== 'backup'} color="var(--good)" dashed={plan !== 'backup'} />
       </Draw>
 
-      <At x={13} y={29}>
+      <At x={13} y={29} p={{ x: 16, y: 52 }}>
         <MiniRay mood={end === 'fail' ? 'sad' : end === 'none' ? (busy ? 'think' : 'happy') : 'happy'} size={5.400} />
       </At>
 
-      <At x={80} y={17} w={26}>
+      <At x={80} y={17} w={26} p={{ x: 68, y: 20, w: 50 }}>
         <Card tone={end === 'ok' ? 'ok' : tries.length ? 'bad' : undefined} className={tries.length && end !== 'ok' && !trying ? 'k-shake' : ''} key={tries.length}>
           <div className="k-center">
             <Pic size={2.200}>{world === 'flaky' ? (end === 'ok' ? '🌤️' : '😴') : '💥'}</Pic>
@@ -343,7 +357,7 @@ function Retry() {
           </div>
         </Card>
       </At>
-      <At x={80} y={42} w={26} style={{ opacity: plan === 'backup' ? 1 : 0.28 }}>
+      <At x={80} y={42} w={26} p={{ x: 68, y: 86, w: 50 }} style={{ opacity: plan === 'backup' ? 1 : 0.28 }}>
         <Card tone={end === 'backup' ? 'ok' : undefined} soft={plan !== 'backup'}>
           {plan === 'backup' && <StepTag n={4} corner now={trying && tries.length >= 3} todo={end !== 'backup' && !(trying && tries.length >= 3)} />}
           <div className="k-center">
@@ -357,7 +371,7 @@ function Retry() {
       {[0, 1, 2].map((i) => {
         const max = plan === 'none' ? 1 : 3;
         return (
-          <At key={i} x={37 + i * 11} y={31} hide={i >= max}>
+          <At key={i} x={37 + i * 11} y={31} hide={i >= max} p={{ x: 46 + i * 18, y: 53 }}>
             <div className={`rt-try${tries[i] ? ` is-${tries[i]}` : ''}`}>
               <StepTag n={i + 1} corner now={trying && tries.length === i} todo={!tries[i] && !(trying && tries.length === i)} />
               <b>{tries[i] === 'ok' ? '✓' : tries[i] === 'bad' ? '✕' : '…'}</b>
@@ -367,7 +381,7 @@ function Retry() {
         );
       })}
 
-      <At x={30} y={47.500} w={44} hide={end === 'none'}>
+      <At x={30} y={47.500} w={44} hide={end === 'none'} p={{ x: 50, y: 119, w: 92 }}>
         <Bubble who="ray" tone={end === 'fail' ? 'bad' : 'ok'}>
           {answer}
         </Bubble>

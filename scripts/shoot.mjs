@@ -36,7 +36,15 @@ const browser = await puppeteer.launch({
 const errors = [];
 try {
   const page = await browser.newPage();
-  await page.setViewport({ width, height, deviceScaleFactor: Number(flag('dpr', 1)) });
+  // --phone makes it a touch screen, as on a real phone (390 × 844 unless --w and --h say otherwise).
+  const phone = has('phone');
+  await page.setViewport({
+    width: phone && !args.includes('--w') ? 390 : width,
+    height: phone && !args.includes('--h') ? 844 : height,
+    deviceScaleFactor: Number(flag('dpr', phone ? 2 : 1)),
+    isMobile: phone,
+    hasTouch: phone,
+  });
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text());
   });

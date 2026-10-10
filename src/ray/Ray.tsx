@@ -6,6 +6,8 @@ import { ANCHOR, WIRE_LINES, toD } from './geometry';
 export type RayMode = 'skin' | 'scan' | 'xray';
 
 export const LENS_R = 86;
+/** A circle the size of the lens, as a path, for cutting a hole. */
+const hole = (x: number, y: number) => `M${x - LENS_R} ${y}a${LENS_R} ${LENS_R} 0 1 0 ${LENS_R * 2} 0a${LENS_R} ${LENS_R} 0 1 0 ${-LENS_R * 2} 0Z`;
 const NONE: OrganId[] = [];
 
 interface Props {
@@ -396,10 +398,6 @@ export function Ray({ mode, scanY, lens, hover, active = null, lit = NONE, off =
           <stop offset=".55" stopColor="#6fe3ff" />
           <stop offset="1" stopColor="#2aa4d4" />
         </radialGradient>
-        <radialGradient id={ids.lens}>
-          <stop offset=".86" stopColor="#000" />
-          <stop offset="1" stopColor="#fff" />
-        </radialGradient>
         <filter id={ids.glow} x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="5" result="b" />
           <feMerge>
@@ -409,24 +407,26 @@ export function Ray({ mode, scanY, lens, hover, active = null, lit = NONE, off =
         </filter>
         {showSkin && (
           <>
-            {/* The skin is cut away above the scanner and inside the lens… */}
-            <mask id={ids.mask} maskUnits="userSpaceOnUse" x="-340" y="-60" width="1280" height="840">
-              <rect x="-340" y="-60" width="1280" height="840" fill="#fff" />
-              {mode === 'scan' && <rect x="-340" y="-60" width="1280" height={revealed} fill="#000" />}
-              {lens && <circle cx={lens.x} cy={lens.y} r={LENS_R} fill={`url(#${ids.lens})`} />}
-            </mask>
-            {/* …and the inside shows only there. */}
-            <mask id={ids.inside} maskUnits="userSpaceOnUse" x="-340" y="-60" width="1280" height="840">
-              {mode === 'scan' && <rect x="-340" y="-60" width="1280" height={revealed} fill="#fff" />}
-              {lens && <circle cx={lens.x} cy={lens.y} r={LENS_R} fill="#fff" />}
-            </mask>
+            {/*
+              The skin is cut away above the scanner and inside the lens…
+              (Clip paths, not masks: they are much lighter to draw, and steadier on phones.
+              With the even-odd rule, the circle is a hole in the rectangle.)
+            */}
+            <clipPath id={ids.mask} clipPathUnits="userSpaceOnUse">
+              <path clipRule="evenodd" d={`M-340 ${mode === 'scan' ? revealed - 60 : -60}H940V780H-340Z${lens ? hole(lens.x, lens.y) : ''}`} />
+            </clipPath>
+            {/* …and the inside shows only there. With no scanner and no lens this is empty, and nothing shows. */}
+            <clipPath id={ids.inside} clipPathUnits="userSpaceOnUse">
+              {mode === 'scan' && <rect x="-340" y="-60" width="1280" height={revealed} />}
+              {lens && <circle cx={lens.x} cy={lens.y} r={LENS_R} />}
+            </clipPath>
           </>
         )}
       </defs>
 
       <ellipse cx="300" cy="664" rx="210" ry="20" className="floor-shadow" />
 
-      <g className="ray-inside" mask={showSkin ? `url(#${ids.inside})` : undefined}>
+      <g className="ray-inside" clipPath={showSkin ? `url(#${ids.inside})` : undefined}>
         <g filter={`url(#${ids.glow})`}>
           <XrayBody />
         </g>
@@ -452,7 +452,7 @@ export function Ray({ mode, scanY, lens, hover, active = null, lit = NONE, off =
       </g>
 
       {showSkin && (
-        <g mask={`url(#${ids.mask})`}>
+        <g clipPath={`url(#${ids.mask})`}>
           <Skin ids={ids} />
         </g>
       )}

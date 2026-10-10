@@ -16,6 +16,9 @@ const THINGS: Array<{ id: Thing; icon: string; name: string; sees: string; blind
   { id: 'file', icon: '📄', name: 'A file', sees: 'It is a 12-page guide about looking after cats.', blind: "I can't open files by myself. A reader has to turn it into words first." },
 ];
 
+/** On the tall (phone) stage the four things sit two by two above Ray. */
+const thingAt = (i: number) => ({ x: i % 2 ? 73.500 : 26.500, y: 19 + Math.floor(i / 2) * 12, w: 45 });
+
 function EyesEars() {
   const [multi, setMulti] = useState(true);
   const [got, setGot] = useState<Thing | null>(null);
@@ -54,11 +57,11 @@ function EyesEars() {
         </Toggle>
       }
     >
-      <At x={15} y={5.500}>
+      <At x={15} y={5.500} p={{ x: 50, y: 6 }}>
         <span className="k-label">Give Ray one of these</span>
       </At>
       {THINGS.map((t, i) => (
-        <At key={t.id} x={15} y={14.500 + i * 10.300} w={22}>
+        <At key={t.id} x={15} y={14.500 + i * 10.300} w={22} p={thingAt(i)}>
           <button className={`ee-thing${got === t.id ? ' is-on' : ''}`} onClick={() => give(t.id)} disabled={busy}>
             <Pic size={1.900}>{t.icon}</Pic>
             <b>{t.name}</b>
@@ -67,19 +70,25 @@ function EyesEars() {
       ))}
 
       {fly && (
-        <At x={fly.there ? 50 : 15} y={fly.there ? 29 : 14.500 + THINGS.findIndex((t) => t.id === fly.id) * 10.300} z={5} style={{ scale: fly.there ? '0.5' : '1', opacity: fly.there ? 0.2 : 1 }}>
+        <At
+          x={fly.there ? 50 : 15}
+          y={fly.there ? 29 : 14.500 + THINGS.findIndex((t) => t.id === fly.id) * 10.300}
+          z={5}
+          p={fly.there ? { x: 50, y: 66 } : thingAt(THINGS.findIndex((t) => t.id === fly.id))}
+          style={{ scale: fly.there ? '0.5' : '1', opacity: fly.there ? 0.2 : 1 }}
+        >
           <Pic size={3}>{THINGS.find((t) => t.id === fly.id)!.icon}</Pic>
         </At>
       )}
 
-      <At x={50} y={30}>
+      <At x={50} y={30} p={{ y: 66 }}>
         <MiniRay mood={mood} size={7} />
       </At>
-      <At x={50} y={47}>
+      <At x={50} y={47} p={{ y: 86 }}>
         <Tag tone={multi ? 'ok' : 'warn'}>{multi ? 'can read, look and listen' : 'words-only brain'}</Tag>
       </At>
 
-      <At x={81} y={29} w={32} hide={!thing}>
+      <At x={81} y={29} w={32} hide={!thing} p={{ x: 50, y: 110, w: 90 }}>
         <Bubble who="ray" tone={understood ? 'ok' : 'warn'} key={`${got}${multi}`}>
           {thing ? (multi ? thing.sees : thing.blind) : ''}
         </Bubble>
@@ -145,23 +154,23 @@ function TidyBoxes() {
         </>
       }
     >
-      <At x={25} y={7}>
+      <At x={25} y={7} p={{ x: 50, y: 5 }}>
         <span className="k-label">What Ray said</span>
       </At>
-      <At x={12} y={46}>
+      <At x={12} y={46} p={{ x: 88, y: 47 }}>
         <MiniRay mood={done ? 'happy' : 'wink'} size={4} />
       </At>
-      <At x={27} y={25} w={42}>
+      <At x={27} y={25} w={42} p={{ x: 50, y: 24, w: 92 }}>
         <div className="tb-said k-bubble is-ray">
           Oh, you will love {said(0)}! It is at {said(1)}. They close at {said(2)}, and I would give it {said(3)} stars.
         </div>
       </At>
 
-      <At x={76} y={7}>
+      <At x={76} y={7} p={{ x: 50, y: 49 }}>
         <span className="k-label">{code ? 'What the program gets' : 'The form'}</span>
       </At>
       {code ? (
-        <At x={76} y={30} w={40}>
+        <At x={76} y={30} w={40} p={{ x: 50, y: 88, w: 80 }}>
           <Card className="tb-code">
             <pre>
               {'{\n'}
@@ -180,7 +189,7 @@ function TidyBoxes() {
         </At>
       ) : (
         FIELDS.map((f, i) => (
-          <At key={f.key} x={76} y={15.500 + i * 9.600} w={38}>
+          <At key={f.key} x={76} y={15.500 + i * 9.600} w={38} p={{ x: 50, y: 63 + i * 16.500, w: 84 }}>
             <div className={`tb-box${n > i ? ' is-in' : ''}`} style={{ '--c': f.color } as CSSProperties}>
               <span>
                 {tag(i)}
@@ -234,32 +243,32 @@ function Streaming() {
         </Btn>
       }
     >
-      <At x={50} y={6} w={50}>
+      <At x={50} y={6} w={50} p={{ x: 38, y: 7, w: 66 }}>
         <Bubble who="you">How tall is a giraffe?</Bubble>
       </At>
-      <At x={90} y={6}>
+      <At x={90} y={6} p={{ x: 86, y: 7 }}>
         <Tag tone="info">⏱ {secs} s</Tag>
       </At>
 
-      <At x={15} y={21} w={24}>
+      <At x={15} y={21} w={24} p={{ x: 50, y: 25, w: 90 }}>
         <div className="k-center">
           <span className="k-title">All at once</span>
           <Tag tone={done ? 'warn' : 'info'}>first word after 3.2 s</Tag>
         </div>
       </At>
-      <At x={63} y={21} w={66}>
+      <At x={63} y={21} w={66} p={{ x: 50, y: 48, w: 90 }}>
         <Card className="st-lane">
           {tick < 0 ? <span className="k-muted">…</span> : done ? ANSWER.join(' ') : <span className="k-dots"><i /><i /><i /></span>}
         </Card>
       </At>
 
-      <At x={15} y={41} w={24}>
+      <At x={15} y={41} w={24} p={{ x: 50, y: 78, w: 90 }}>
         <div className="k-center">
           <span className="k-title">Word by word</span>
           <Tag tone="ok">first word after 0.2 s</Tag>
         </div>
       </At>
-      <At x={63} y={41} w={66}>
+      <At x={63} y={41} w={66} p={{ x: 50, y: 101, w: 90 }}>
         <Card className="st-lane" tone={tick > 0 ? 'ok' : undefined}>
           {tick < 0 ? (
             <span className="k-muted">…</span>

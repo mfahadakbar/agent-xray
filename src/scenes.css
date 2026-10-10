@@ -28,8 +28,114 @@
   user-select: none;
   -webkit-user-select: none;
 }
-.scene.is-tall .stage {
-  aspect-ratio: 4 / 3;
+/*
+ * On a phone the stage stands up, and the type is bigger. The stage is as wide as the screen, unless
+ * the screen is too short to show it together with its caption and buttons: then it gets narrower,
+ * never cut. (`svh` is the height with the browser's own bars showing, so nothing jumps while scrolling.)
+ */
+.scene.is-portrait .stage-wrap {
+  width: clamp(290px, calc((100vh - var(--bar-h, 190px) - 60px) * 0.75), 100%);
+  width: clamp(290px, calc((100svh - var(--bar-h, 190px) - 6px) * 0.75), 100%);
+  margin-inline: auto;
+}
+.scene.is-portrait .stage {
+  aspect-ratio: 3 / 4;
+  font-size: 3.2cqw;
+}
+/* When the stage is narrower than the screen, the room beside it is the same dark as the stage: no bands. */
+.scene.is-portrait {
+  background: #070d1b;
+}
+.scene.is-portrait .scene-bar {
+  background: #0b1424;
+}
+/* Small print is a little bigger on the tall stage, so it can still be read on a phone. */
+.scene.is-portrait .k-card small,
+.scene.is-portrait .k-small {
+  font-size: 0.76em;
+}
+.scene.is-portrait .k-tag {
+  font-size: 0.8em;
+}
+/*
+ * The bar under the stage is kept short on a phone, so the picture, its caption and its buttons
+ * are on the screen together. The caption always has room for three lines: the stage must not
+ * move when a longer caption comes.
+ */
+.scene.is-snug .scene-bar {
+  gap: 8px 10px;
+  padding: 10px 12px 12px;
+}
+.scene.is-snug .scene-caption {
+  font-size: 15.5px;
+  line-height: 1.28;
+  padding-left: 11px;
+}
+.scene.is-portrait .scene-caption {
+  flex-basis: 100%;
+  min-height: 3.84em;
+}
+.scene.is-snug .scene-caption.is-long {
+  font-size: 14.5px;
+}
+.scene.is-portrait .scene-caption.is-long {
+  min-height: 4.1em;
+}
+.scene.is-snug .scene-controls {
+  gap: 7px 8px;
+}
+.scene.is-portrait .scene-controls {
+  width: 100%;
+}
+/* a phone on its side has little height: the caption gets room for two lines */
+.scene.is-short .scene-caption {
+  flex-basis: 260px;
+  min-height: 2.56em;
+}
+.scene.is-snug .kbtn {
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+.scene.is-snug .ktoggle {
+  min-height: 40px;
+  padding: 0 9px 0 12px;
+  font-size: 14px;
+  gap: 7px;
+}
+/* the switch itself shows whether it is on: the word is not needed as well */
+.scene.is-snug .ktoggle-state {
+  display: none;
+}
+.scene.is-snug .kchoice {
+  padding: 3px;
+  gap: 2px;
+  border-radius: 21px;
+}
+.scene.is-snug .kchoice button {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 13.5px;
+}
+.scene.is-snug .kslider {
+  min-height: 40px;
+  gap: 8px;
+  font-size: 14px;
+}
+.scene.is-snug .kslider input {
+  width: 118px;
+}
+/* A phone on its side: the wide stage, fitted to the height of the screen together with its caption and buttons. */
+.scene.is-short .stage-wrap {
+  width: min(100%, calc((100vh - var(--bar-h, 110px) - 40px) * 16 / 9));
+  width: min(100%, calc((100svh - var(--bar-h, 110px) - 6px) * 16 / 9));
+  margin-inline: auto;
+}
+.scene.is-short {
+  background: #070d1b;
+}
+.scene.is-short .scene-bar {
+  background: #0b1424;
 }
 .draw {
   position: absolute;
@@ -59,21 +165,6 @@
   pointer-events: none;
 }
 
-.scene-turn {
-  display: none;
-  margin: 0;
-  padding: 6px 14px 0;
-  font: 600 12px var(--body);
-  color: var(--muted);
-  text-align: center;
-}
-@media (max-width: 520px) and (orientation: portrait) {
-  .scene-turn {
-    display: block;
-  }
-}
-
-/* caption and controls */
 .scene-bar {
   display: flex;
   flex-wrap: wrap;
@@ -725,17 +816,6 @@
   }
 }
 
-@media (max-width: 700px) {
-  .scene-bar {
-    padding: 12px 14px 14px;
-  }
-  .kbtn {
-    padding: 0 15px;
-  }
-  .kslider input {
-    width: 110px;
-  }
-}
 
 /* ── brain scenes ──────────────────────────────────────────────────────────── */
 
@@ -1556,9 +1636,12 @@
   filter: drop-shadow(0 0 0.4em var(--c));
   pointer-events: none;
 }
+/* The box around the magnifier lets the pointer through too, so you can grab the magnifier and drag it. */
+.vm-pin-at {
+  pointer-events: none;
+}
 .vm-touch {
   position: absolute;
-  inset: 0;
   z-index: 2;
   cursor: crosshair;
   touch-action: none;
@@ -2682,4 +2765,141 @@ button.bk-block:hover {
 .pg-how b {
   color: var(--good);
   margin-right: 0.3em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The tall stage: how the pieces inside a scene change shape on a phone.
+   Where each piece sits is written in the scene (the `p` of an <At>). This is
+   only for pieces that are built differently when they are wide and short
+   instead of narrow and tall.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* the step buttons: the numbers get a row of their own, big enough for a thumb */
+.scene.is-portrait .stepnav {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.scene.is-portrait .stepdots {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 2px 0 0;
+}
+.scene.is-portrait .stepdots button {
+  width: 31px;
+  height: 31px;
+  font-size: 14px;
+}
+
+/* next word: a line of words may wrap, and the numbered tags need air between the lines */
+.scene.is-portrait .nw-sentence {
+  row-gap: 0.8em;
+}
+.scene.is-portrait .nw-row {
+  grid-template-columns: 6em 1fr 3em;
+  gap: 0.6em;
+}
+
+/* pick a brain: each card lies down. Who it is on the left, how good it is on the right, the verdict below. */
+.scene.is-portrait .pb-card {
+  grid-template-columns: 9.5em 1fr;
+  grid-template-areas: 'who meters' 'verdict verdict';
+  align-items: center;
+  gap: 0.45em 1em;
+  padding: 0.65em 0.9em 0.7em;
+}
+.scene.is-portrait .pb-card > .k-center {
+  grid-area: who;
+  gap: 0.1em;
+}
+.scene.is-portrait .pb-meters {
+  grid-area: meters;
+}
+.scene.is-portrait .pb-verdict {
+  grid-area: verdict;
+  min-height: 0;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-items: start;
+  text-align: left;
+  gap: 0.6em;
+}
+.scene.is-portrait .pb-card.is-best {
+  transform: scale(1.025);
+}
+
+/* chunking: a bite's verdict sits in its top corner, clear of the lines */
+.scene.is-portrait .ck-bite span {
+  top: 0.9em;
+  right: 0.5em;
+}
+.scene.is-portrait .ck-line {
+  height: 2.300em;
+}
+/* rerank: the frame around the two pages Ray reads */
+.scene.is-portrait .rr-reads {
+  height: 22.400cqw;
+}
+
+/* a tool and its label: the card lies down, picture on the left, label on the right */
+.scene.is-portrait .tl-tool {
+  grid-template-columns: auto 1fr;
+  justify-items: start;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.7em 0.8em;
+}
+.scene.is-portrait .tl-label {
+  min-height: 0;
+}
+.scene.is-portrait .tl-tool.is-read {
+  transform: translateX(0.5em);
+}
+.scene.is-portrait .tl-mine {
+  left: auto;
+  right: 0.9em;
+  translate: none;
+}
+
+/* ask first: the choices sit in one row */
+.scene.is-portrait .af-options {
+  align-items: center;
+  gap: 0.45em;
+}
+.scene.is-portrait .af-options .kbtn {
+  min-height: 2.700em;
+  padding: 0 0.85em;
+  font-size: 0.98em;
+}
+/* a team: what a friend says may take two lines under it */
+.scene.is-portrait .tm-say .k-tag {
+  white-space: normal;
+  text-align: center;
+  border-radius: 1em;
+  line-height: 1.25;
+}
+
+/* trust: the three hearts lie in a row, beside their name */
+.scene.is-portrait .gb-hearts {
+  grid-auto-flow: column;
+  gap: 0.35em;
+  font-size: 1.500em;
+}
+/* code agents: the little program has to fit beside the price list */
+.scene.is-portrait .ca-code pre {
+  font-size: 0.7em;
+}
+/* a recipe: the name of a step can be read on a phone */
+.scene.is-portrait .rc-node .k-label {
+  font-size: 0.92em;
+}
+
+/* memory: the board and the notebook do not need to be as tall */
+.scene.is-portrait .wb-board,
+.scene.is-portrait .ls-book {
+  min-height: 13em;
 }

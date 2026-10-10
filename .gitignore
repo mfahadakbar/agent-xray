@@ -1,5 +1,6 @@
 node_modules
 .vite
 shots
+video/out
 *.log
 .DS_Store

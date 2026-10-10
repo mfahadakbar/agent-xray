@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { useRunner, useSteps } from '../lib/hooks';
-import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, Pic, Scene, StepNav, StepTag, StepTags, Tag, Toggle, tagsFor, type Mood } from './kit';
+import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, Pic, Scene, StepNav, StepTag, StepTags, Tag, Toggle, tagsFor, usePortrait, type Mood } from './kit';
 import { register, type SceneProps } from './registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -111,25 +111,25 @@ function UseATool({ variant }: SceneProps) {
       }
     >
       <Draw>
-        <Arrow from={[30, 26]} to={[66, 24]} bend={-3} flow={phase === 2} off={phase !== 2} />
-        <Arrow from={[66, 34]} to={[30, 36]} bend={-3} flow={phase === 3} off={phase !== 3} color="var(--good)" />
+        <Arrow from={[30, 26]} to={[66, 24]} bend={-3} p={{ from: [28, 50], to: [58, 47] }} flow={phase === 2} off={phase !== 2} />
+        <Arrow from={[66, 34]} to={[30, 36]} bend={-3} p={{ from: [58, 73], to: [28, 76] }} flow={phase === 3} off={phase !== 3} color="var(--good)" />
       </Draw>
 
-      <At x={32} y={6.500} w={54}>
+      <At x={32} y={6.500} w={54} p={{ x: 50, y: 8, w: 88 }}>
         <Bubble who="you" key={job.id}>
           {job.ask}
         </Bubble>
       </At>
-      <At x={18} y={31}>
+      <At x={18} y={31} p={{ x: 17, y: 61 }}>
         <MiniRay mood={mood} size={5.800} />
       </At>
-      <At x={25.500} y={21} hide={phase !== 1} z={3}>
+      <At x={25.500} y={21} p={{ x: 42, y: 34 }} hide={phase !== 1} z={3}>
         <span className="k-thought">
           <StepTag n={1} now /> 🤔 I need {hands ? 'a tool' : 'help'}…
         </span>
       </At>
 
-      <At x={80} y={29} w={26} style={{ opacity: hands ? 1 : 0.25 }}>
+      <At x={80} y={29} w={26} p={{ x: 77, y: 61, w: 40 }} style={{ opacity: hands ? 1 : 0.25 }}>
         <Card className={`k-center${phase === 2 || phase === 3 ? ' k-glow' : ''}`} tone={phase === 3 ? 'ok' : undefined} soft={!hands}>
           <Pic size={3}>{job.icon}</Pic>
           <span className="k-title">{job.tool}</span>
@@ -137,18 +137,18 @@ function UseATool({ variant }: SceneProps) {
         </Card>
       </At>
 
-      <At x={phase >= 2 ? 62 : 32} y={21} hide={phase !== 2} z={3} slow style={{ fontSize: '1.2em' }}>
+      <At x={phase >= 2 ? 62 : 32} y={21} p={{ x: phase >= 2 ? 60 : 32, y: 40 }} hide={phase !== 2} z={3} slow style={{ fontSize: '1.2em' }}>
         <Tag>
           <StepTag n={2} now /> 🧾 {job.order}
         </Tag>
       </At>
-      <At x={phase >= 3 ? 34 : 64} y={39.500} hide={phase !== 3} z={3} slow style={{ fontSize: '1.2em' }}>
+      <At x={phase >= 3 ? 34 : 64} y={39.500} p={{ x: phase >= 3 ? 36 : 64, y: 84 }} hide={phase !== 3} z={3} slow style={{ fontSize: '1.2em' }}>
         <Tag tone="ok">
           <StepTag n={3} now /> 📦 {job.result}
         </Tag>
       </At>
 
-      <At x={40} y={49} w={62} hide={phase < 4}>
+      <At x={40} y={49} w={62} p={{ x: 50, y: 114, w: 90 }} hide={phase < 4}>
         <Bubble who="ray" tone={hands ? 'ok' : 'bad'} key={`${job.id}${hands}`}>
           <StepTag n={hands ? 4 : 2} corner now />
           {hands ? job.answer : job.guess}
@@ -181,22 +181,24 @@ const SLIP_TURNS = SLIP_STEPS.map((st) => [`${st.at}`]);
 function OrderSlip() {
   const s = useSteps(SLIP_STEPS.length);
   const slipX = [17, 17, 50, 83, 17][s.i];
+  // On the tall (phone) stage the brain, the program and the tool stand one under the other.
+  const slipY = [38, 38, 68, 98, 38][s.i];
   return (
     <Scene caption={SLIP_STEPS[s.i].caption} tone={s.atEnd ? 'ok' : undefined} step={s.i + 1} controls={<StepNav s={s} />}>
       <Draw>
-        <Arrow from={[26, 24]} to={[41, 24]} flow={s.i === 2} off={s.i !== 2} />
-        <Arrow from={[59, 24]} to={[74, 24]} flow={s.i === 2} off={s.i !== 2} />
-        <Arrow from={[74, 32]} to={[59, 32]} flow={s.i === 3} off={s.i !== 3} color="var(--good)" />
-        <Arrow from={[41, 32]} to={[26, 32]} flow={s.i === 3 || s.i === 4} off={s.i < 3} color="var(--good)" />
+        <Arrow from={[26, 24]} to={[41, 24]} p={{ from: [22, 49], to: [22, 57] }} flow={s.i === 2} off={s.i !== 2} />
+        <Arrow from={[59, 24]} to={[74, 24]} p={{ from: [22, 79], to: [22, 87] }} flow={s.i === 2} off={s.i !== 2} />
+        <Arrow from={[74, 32]} to={[59, 32]} p={{ from: [36, 87], to: [36, 79] }} flow={s.i === 3} off={s.i !== 3} color="var(--good)" />
+        <Arrow from={[41, 32]} to={[26, 32]} p={{ from: [36, 57], to: [36, 49] }} flow={s.i === 3 || s.i === 4} off={s.i < 3} color="var(--good)" />
       </Draw>
-      <At x={30} y={6} w={46}>
+      <At x={30} y={6} w={46} p={{ x: 41, y: 7, w: 74 }}>
         <Bubble who="you">What's the weather in Paris?</Bubble>
       </At>
-      <At x={80} y={6} hide={s.i > 1}>
+      <At x={80} y={6} p={{ x: 50, y: 20 }} hide={s.i > 1}>
         <Tag>📋 menu: get_weather(city)</Tag>
       </At>
       {LANES.map((l, i) => (
-        <At key={l.name} x={l.x} y={28} w={17}>
+        <At key={l.name} x={l.x} y={28} w={17} p={{ x: 29, y: 38 + i * 30, w: 44 }}>
           <Card className={`k-center lp-station${SLIP_STEPS[s.i].at === i ? ' is-on' : ''}`}>
             <StepTags tags={tagsFor(SLIP_TURNS, `${i}`, s.i)} current={s.i + 1} />
             <Pic size={2.200}>{l.icon}</Pic>
@@ -206,13 +208,13 @@ function OrderSlip() {
         </At>
       ))}
 
-      <At x={slipX} y={45.500} w={s.i >= 3 ? 26 : 30} z={3} hide={s.i === 0} slow>
+      <At x={slipX} y={45.500} w={s.i >= 3 ? 26 : 30} p={{ x: 77, y: slipY, w: 42 }} z={3} hide={s.i === 0} slow>
         <Card tone={s.i >= 3 ? 'ok' : undefined} className="k-mono os-slip" key={s.i >= 3 ? 'r' : 'o'}>
           <small>{s.i >= 3 ? (s.i === 4 ? 'the brain reads' : 'result') : 'order slip'}</small>
           {s.i >= 3 ? '"18°C, sunny"' : 'get_weather(city: "Paris")'}
         </Card>
       </At>
-      <At x={62} y={47} w={40} hide={!s.atEnd}>
+      <At x={62} y={47} w={40} p={{ x: 50, y: 122, w: 90 }} hide={!s.atEnd}>
         <Bubble who="ray" tone="ok">
           It is 18°C and sunny in Paris.
         </Bubble>
@@ -280,14 +282,14 @@ function ToolLabel() {
         </>
       }
     >
-      <At x={32} y={6.500} w={44}>
+      <At x={32} y={6.500} w={44} p={{ x: 50, y: 7, w: 78 }}>
         <Bubble who="you">My cat is hungry! 🐱</Bubble>
       </At>
       {tools.map((t, i) => {
         const mine = i === 1;
         const won = picked === 'yes' && mine;
         return (
-          <At key={i} x={19 + i * 31} y={27} w={27}>
+          <At key={i} x={19 + i * 31} y={27} w={27} p={{ x: 50, y: 30 + i * 27, w: 90 }}>
             <div className={`tl-tool${look === i ? ' is-read' : ''}${won ? ' is-won' : ''}${mine && !clear ? ' is-lazy' : ''}`}>
               {i < read && <StepTag n={i + 1} corner now={look === i} />}
               <Pic size={2.400}>{t.icon}</Pic>
@@ -300,10 +302,10 @@ function ToolLabel() {
           </At>
         );
       })}
-      <At x={14} y={48}>
+      <At x={14} y={48} p={{ x: 14, y: 115 }}>
         <MiniRay mood={picked === 'yes' ? 'happy' : picked === 'no' ? 'sad' : busy ? 'think' : 'happy'} size={4} />
       </At>
-      <At x={50} y={48.500} w={56} hide={picked === 'none'}>
+      <At x={50} y={48.500} w={56} p={{ x: 59, y: 115, w: 74 }} hide={picked === 'none'}>
         <Bubble who="ray" tone={picked === 'yes' ? 'ok' : 'bad'} key={picked}>
           <StepTag n={tools.length + 1} corner now />
           {picked === 'yes' ? 'I used feed_cat. The cat is eating! 😺' : 'None of my tools say anything about feeding a cat. Sorry!'}
@@ -335,8 +337,12 @@ function Plug() {
   const [mcp, setMcp] = useState(false);
   const [n, setN] = useState(3);
   const tools = PLUG_TOOLS.slice(0, n);
-  const appY = (i: number) => 14 + i * 14;
-  const toolY = (i: number) => 28 - ((n - 1) * 9.500) / 2 + i * 9.500;
+  // On the tall (phone) stage the apps and the tools have more room between them, top to bottom.
+  const tall = usePortrait();
+  const hubY = tall ? 60 : 28;
+  const gap = tall ? 18 : 9.500;
+  const appY = (i: number) => (tall ? 34 + i * 26 : 14 + i * 14);
+  const toolY = (i: number) => hubY - ((n - 1) * gap) / 2 + i * gap;
   const cables = mcp ? APPS.length + n : APPS.length * n;
 
   return (
@@ -362,27 +368,27 @@ function Plug() {
         {mcp ? (
           <>
             {APPS.map((_, i) => (
-              <Arrow key={`a${i}`} from={[25, appY(i)]} to={[45, 28]} head={false} width={0.5} color="var(--c)" />
+              <Arrow key={`a${i}`} from={[25, appY(i)]} to={[45, 28]} p={{ from: [33, appY(i)], to: [44, hubY] }} head={false} width={0.5} color="var(--c)" />
             ))}
             {tools.map((_, i) => (
-              <Arrow key={`t${i}`} from={[55, 28]} to={[75, toolY(i)]} head={false} width={0.5} color="var(--c)" />
+              <Arrow key={`t${i}`} from={[55, 28]} to={[75, toolY(i)]} p={{ from: [56, hubY], to: [67, toolY(i)] }} head={false} width={0.5} color="var(--c)" />
             ))}
           </>
         ) : (
           APPS.flatMap((_, a) =>
-            tools.map((__, t) => <Arrow key={`${a}-${t}`} from={[25, appY(a)]} to={[75, toolY(t)]} bend={(a - 1) * 2 - (t - 1) * 1.500} head={false} width={0.4} dashed={(a + t) % 2 === 1} color={CABLE[a * 5 + t]} />),
+            tools.map((__, t) => <Arrow key={`${a}-${t}`} from={[25, appY(a)]} to={[75, toolY(t)]} p={{ from: [33, appY(a)], to: [67, toolY(t)] }} bend={(a - 1) * 2 - (t - 1) * 1.500} head={false} width={0.4} dashed={(a + t) % 2 === 1} color={CABLE[a * 5 + t]} />),
           )
         )}
       </Draw>
 
-      <At x={15} y={5}>
+      <At x={15} y={5} p={{ x: 18, y: 9 }}>
         <span className="k-small">apps</span>
       </At>
-      <At x={85} y={5}>
+      <At x={85} y={5} p={{ x: 82, y: 9 }}>
         <span className="k-small">tools</span>
       </At>
       {APPS.map((a, i) => (
-        <At key={a.name} x={15} y={appY(i)} w={20}>
+        <At key={a.name} x={15} y={appY(i)} w={20} p={{ x: 18, y: appY(i), w: 30 }}>
           <Card className="pg-node">
             <Pic size={1.600}>{a.icon}</Pic>
             <span>{a.name}</span>
@@ -390,20 +396,20 @@ function Plug() {
         </At>
       ))}
       {tools.map((t, i) => (
-        <At key={t.name} x={85} y={toolY(i)} w={20}>
+        <At key={t.name} x={85} y={toolY(i)} w={20} p={{ x: 82, y: toolY(i), w: 30 }}>
           <Card className="pg-node k-pop">
             <Pic size={1.600}>{t.icon}</Pic>
             <span>{t.name}</span>
           </Card>
         </At>
       ))}
-      <At x={50} y={28} hide={!mcp}>
+      <At x={50} y={28} p={{ y: hubY }} hide={!mcp}>
         <Card className="k-center pg-hub">
           <Pic size={2}>🔌</Pic>
           <span className="k-title">MCP</span>
         </Card>
       </At>
-      <At x={50} y={50}>
+      <At x={50} y={50} p={{ y: 118 }}>
         <Tag tone={mcp ? 'ok' : 'warn'}>{mcp ? `${cables} standard plugs` : `${cables} special cables`}</Tag>
       </At>
     </Scene>
@@ -440,13 +446,13 @@ function HowToCards() {
       tone={j.open ? 'ok' : undefined}
       controls={<Choice label="Give Ray a job" value={job} onChange={setJob} options={SKILL_JOBS.map((s) => ({ id: s.id, label: s.label }))} />}
     >
-      <At x={50} y={5}>
+      <At x={50} y={5} p={{ y: 5 }}>
         <span className="k-small">Ray's how-to cards</span>
       </At>
       {HOWTO.map((h, i) => {
         const open = j.open === h.id;
         return (
-          <At key={h.id} x={x(i)} y={open ? 24 : 14.500} w={21} z={open ? 3 : 1}>
+          <At key={h.id} x={x(i)} y={open ? 24 : 14.500} w={21} p={{ x: open ? 50 : i % 2 ? 73.500 : 26.500, y: open ? 66 : 16 + Math.floor(i / 2) * 13.500, w: open ? 84 : 45 }} z={open ? 3 : 1}>
             <div className={`hc-card${open ? ' is-open' : ''}`}>
               <span className="hc-top">
                 <Pic size={1.500}>{h.icon}</Pic>
@@ -466,15 +472,15 @@ function HowToCards() {
           </At>
         );
       })}
-      <At x={12} y={48}>
+      <At x={12} y={48} p={{ x: 14, y: 100 }}>
         <MiniRay mood={j.open ? 'happy' : 'wink'} size={4} />
       </At>
-      <At x={42} y={48.500} w={46}>
+      <At x={42} y={48.500} w={46} p={{ x: 59, y: 100, w: 74 }}>
         <Bubble who="ray" tone={j.open ? 'ok' : undefined} key={job}>
           {j.say}
         </Bubble>
       </At>
-      <At x={84} y={48.500} w={26}>
+      <At x={84} y={48.500} w={26} p={{ x: 50, y: 121, w: 80 }}>
         <div className="hc-meter" style={{ '--f': j.open ? 0.34 : 0.1 } as CSSProperties}>
           <span>in the backpack</span>
           <i />

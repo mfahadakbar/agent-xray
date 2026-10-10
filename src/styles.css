@@ -787,6 +787,23 @@ a {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+/* the small name tags next to each part on a narrow screen */
+.pill-title {
+  font: 600 26px var(--display);
+  fill: var(--ink);
+}
+.pill .part-bg {
+  fill: rgba(8, 14, 28, 0.88);
+  stroke: color-mix(in srgb, var(--c) 70%, transparent);
+  stroke-width: 2;
+}
+.pill .part-line {
+  stroke-width: 2.200;
+  stroke: color-mix(in srgb, var(--c) 80%, transparent);
+}
+.pill .part-box:active .part-bg {
+  fill: color-mix(in srgb, var(--c) 26%, #0f192d);
+}
 .part-line {
   fill: none;
   stroke: color-mix(in srgb, var(--c) 62%, transparent);
@@ -1611,6 +1628,10 @@ a {
 .scene-slot {
   margin-top: 20px;
 }
+/* "On this page": only when the page is one long column */
+.jump {
+  display: none;
+}
 
 .inside,
 .shelf {
@@ -2218,16 +2239,143 @@ a.tool:hover .tool-go {
 /* ── smaller screens ───────────────────────────────────────────────────────── */
 
 @media (max-width: 1060px) {
+  /* One column. The page reads: what it is called, try it, what it is, what is inside, the tools. */
   .room {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     padding: 16px 18px 80px;
+    gap: 0;
+  }
+  .room-main {
+    display: contents;
+  }
+  .room-head {
+    order: 1;
+  }
+  .jump {
+    order: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+  }
+  .jump button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 0 13px;
+    border-radius: 999px;
+    border: 1px solid var(--line-2);
+    background: rgba(143, 190, 255, 0.07);
+    font: 500 14px var(--display);
+    color: var(--ink-2);
+  }
+  .jump button i {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--c);
+  }
+  .trip {
+    order: 3;
+  }
+  .scene-slot {
+    order: 4;
   }
   .room-side {
+    order: 5;
     position: static;
     max-height: none;
+    overflow: visible;
+    margin-top: 26px;
+    scroll-margin-top: 12px;
+  }
+  .inside {
+    order: 6;
+    scroll-margin-top: 12px;
+  }
+  .shelf {
+    order: 7;
+  }
+  .sibs {
+    order: 8;
   }
 }
 
+/* A phone held upright: the scene runs from edge to edge, so the picture is as big as the screen allows. */
+@media (max-width: 640px) {
+  .room {
+    padding: 12px 12px 72px;
+  }
+  /* play first: the scene comes straight after the title, and the trip it belongs to comes after it */
+  .scene-slot {
+    order: 3;
+    margin: 16px -12px 0;
+    scroll-margin-top: 0;
+  }
+  .trip {
+    order: 4;
+  }
+  .scene-slot .scene {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+  .room-head h1 {
+    font-size: 31px;
+  }
+  .tagline {
+    margin-top: 10px;
+    font-size: 17.5px;
+  }
+  .back {
+    margin-bottom: 10px;
+  }
+  .trip {
+    margin-top: 16px;
+    padding: 10px 10px 10px;
+  }
+  .atlas-panel {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    border: 0;
+  }
+  .atlas-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px 12px;
+  }
+  .atlas-head > div:first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .atlas-close {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .atlas-search {
+    grid-column: 1 / -1;
+  }
+  .atlas-row {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-size: 15.5px;
+  }
+  .atlas-row.d3 {
+    font-size: 14.5px;
+  }
+}
+
+/* A phone on its side: the bar at the top scrolls away, so a scene has the whole height. */
+@media (max-height: 560px) {
+  .top {
+    position: static;
+  }
+  html {
+    scroll-padding-top: 8px;
+  }
+}
 @media (max-width: 939px) {
   .chart {
     width: min(100%, 430px);
@@ -2242,20 +2390,290 @@ a.tool:hover .tool-go {
   .console-caption {
     border-radius: 22px;
   }
+
+  /* The start page on a narrow screen: the question, Ray, and the button, all on one screen. */
+  .intro {
+    padding: 12px 4px 0;
+  }
+  .intro h1 {
+    font-size: clamp(30px, 9vw, 42px);
+    margin-bottom: 0.3em;
+  }
+  .intro-lede {
+    font-size: 16px;
+  }
+  .intro.is-bottom {
+    padding: 2px 4px 10px;
+  }
+  .intro.is-bottom .btn-xray {
+    font-size: 19px;
+    padding: 0.72em 1.5em;
+  }
+  .intro.is-bottom .intro-ray {
+    margin-top: 12px;
+    font-size: 14.5px;
+  }
+  .intro-touch {
+    color: var(--xray);
+    white-space: nowrap;
+  }
+  .home-skin .chart {
+    width: min(100%, 430px, calc((100vh - 456px) * 600 / 720));
+    width: min(100%, 430px, calc((100svh - 408px) * 600 / 720));
+    min-width: 170px;
+  }
+  /*
+   * A finger on Ray moves the little X-ray window. So a touch on Ray is never taken for scrolling,
+   * and a long press never starts selecting words or opens a menu. The page scrolls from anywhere else.
+   */
+  .home-skin .chart,
+  .home-skin .chart-svg {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* A story on a narrow screen: what was asked, Ray, the numbered stops, what is happening, and the buttons, all on one screen. */
+  .asked {
+    width: 100%;
+    max-width: 460px;
+    margin: 8px 0 2px;
+    padding: 7px 14px 8px;
+    border-radius: 16px 16px 16px 5px;
+    background: #dfe9ff;
+    color: #0b1426;
+    font: 500 15px/1.28 var(--display);
+  }
+  .asked b {
+    display: block;
+    font: 700 10.5px var(--body);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #48608f;
+  }
+  .home.is-running .chart {
+    width: min(100%, 430px, calc((100vh - 400px) * 600 / 720));
+    width: min(100%, 430px, calc((100svh - 352px) * 600 / 720));
+    min-width: 220px;
+  }
+  .home.is-running .deck {
+    padding-top: 0;
+  }
+  .console {
+    width: 100%;
+    max-width: 460px;
+    gap: 9px;
+  }
+  .rail {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+  .rail {
+    gap: 5px;
+  }
+  .rail button {
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #0b1426;
+    box-shadow: inset 0 0 0 1.5px var(--line-2);
+    font: 700 12.5px/1 var(--display);
+    color: var(--muted);
+    transition:
+      background 0.25s,
+      color 0.25s,
+      transform 0.25s var(--spring);
+  }
+  .rail button.is-done {
+    background: #fff;
+    color: #06101f;
+    box-shadow: none;
+  }
+  .rail button.is-now {
+    background: var(--c);
+    color: #06101f;
+    transform: scale(1.2);
+    box-shadow:
+      0 0 0 2px #06101f,
+      0 0 0 4px color-mix(in srgb, var(--c) 50%, transparent);
+  }
+  .console-top,
+  .console-caption {
+    width: 100%;
+  }
+  /* a very small phone: eleven stops still fit in one row, and the two tabs still fit side by side */
+  @media (max-width: 350px) {
+    .deck-tabs button {
+      padding: 8px 8px;
+      font-size: 12.5px;
+    }
+    .rail {
+      gap: 4px;
+    }
+    .rail button {
+      width: 22px;
+      height: 22px;
+      font-size: 11.5px;
+    }
+  }
+  .console-caption {
+    min-height: 66px;
+    padding: 8px 14px 8px 8px;
+    gap: 10px;
+  }
+  .console-caption p {
+    font-size: 16.5px;
+  }
+  .beat-no {
+    width: 40px;
+    height: 40px;
+    font-size: 17px;
+  }
+  /* what the part says at this stop: its own line, in its own colour */
+  .says {
+    width: 100%;
+    min-height: 66px;
+    display: grid;
+    gap: 5px;
+    align-content: start;
+  }
+  .say {
+    padding: 7px 12px 8px;
+    border-radius: 14px;
+    border-left: 4px solid var(--c);
+    background: color-mix(in srgb, var(--c) 10%, rgba(13, 22, 41, 0.94));
+    font: 500 15px/1.3 var(--display);
+    animation: rise 0.3s var(--glide) both;
+  }
+  .say b {
+    display: block;
+    font: 700 10.5px var(--body);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c);
+  }
+  .console-row {
+    flex-direction: column;
+    gap: 9px;
+    width: 100%;
+  }
+  .transport {
+    order: -1;
+  }
+  .tbtn {
+    height: 44px;
+    min-width: 46px;
+  }
+  .tbtn-main {
+    min-width: 132px;
+  }
+  .fcard-list h2 {
+    margin: 10px 0 2px;
+    font: 600 17px var(--display);
+    color: var(--ink-2);
+  }
+  .fcard-list .fcard {
+    font-size: 15px;
+  }
+  .job-parts {
+    gap: 6px;
+  }
+
+  /* the choices under Ray */
+  .ask {
+    width: 100%;
+  }
+  .deck-line {
+    text-align: center;
+  }
+  .deck-tabs {
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: 22px;
+  }
+  .deck-tabs button {
+    padding: 8px 12px;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  .ask-chips {
+    width: 100%;
+    max-width: 460px;
+  }
+  .chip-ask {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  .chip-job {
+    flex: 1 1 calc(50% - 5px);
+    justify-content: flex-start;
+  }
+  .trail {
+    font-size: 13px;
+    gap: 6px 6px;
+    max-width: 460px;
+  }
 }
 
 @media (max-width: 700px) {
+  /* The bar scrolls away with the page, so a scene can have the whole screen. The path gets a line of its own. */
   .top {
-    gap: 10px;
-    padding: 0 12px;
+    position: static;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 52px;
+    gap: 4px 10px;
+    padding: 7px 12px;
+  }
+  .top-actions {
+    order: 2;
+  }
+  .crumbs {
+    order: 3;
+    flex: 1 0 100%;
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: visible;
+    gap: 3px 7px;
+    padding: 2px 0 3px;
+    font-size: 14px;
+  }
+  .crumbs:empty {
+    display: none;
+  }
+  .crumb-here {
+    padding: 3px 10px;
   }
   .brand span,
-  .top-btn-label,
   .seen {
     display: none;
   }
   .top-btn {
-    padding: 0 11px;
+    padding: 0 12px;
+    height: 40px;
+  }
+  .top-xray .top-btn-label {
+    display: inline;
+  }
+  .top-btn:not(.top-xray) .top-btn-label {
+    display: none;
+  }
+  .home {
+    min-height: 0;
+    padding: 0 16px 10px;
+  }
+  html {
+    scroll-padding-top: 12px;
   }
   .room-icon {
     width: 60px;
@@ -2271,6 +2689,97 @@ a.tool:hover .tool-go {
   }
   .atlas-head {
     padding: 14px 14px 12px;
+  }
+}
+
+/* A phone on its side, home screen: Ray on the left, as tall as the screen. What you can do, on the right. */
+@media (max-height: 560px) and (orientation: landscape) and (max-width: 939px) {
+  .home {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 22px;
+    align-items: start;
+    min-height: 0;
+    padding: 6px 18px 10px;
+  }
+  .home > .chart-wrap {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: auto;
+  }
+  .home > .intro.is-top,
+  .home > .asked {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 4px;
+  }
+  .home > .deck {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+  }
+  .home > .fcard-list,
+  .home > .part-grid,
+  .home > .home-foot {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+  /* Ray is as tall as the screen under the top bar. While a story plays the bar is scrolled away, so Ray gets it all. */
+  .chart,
+  .home-skin .chart {
+    width: calc((100vh - 120px) * 600 / 720);
+    width: calc((100svh - 74px) * 600 / 720);
+    min-width: 0;
+  }
+  .home.is-running .chart {
+    width: calc((100vh - 60px) * 600 / 720);
+    width: calc((100svh - 14px) * 600 / 720);
+    min-width: 0;
+  }
+  .intro h1 {
+    font-size: 28px;
+  }
+  .intro.is-top {
+    text-align: left;
+    padding-top: 0;
+  }
+  .says {
+    min-height: 0;
+  }
+}
+
+/* ── touch screens ─────────────────────────────────────────────────────────── */
+
+/* A tap acts at once: no grey flash, and no waiting to see whether it is a double tap. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a,
+[role='button'],
+[role='switch'],
+[role='tab'] {
+  touch-action: manipulation;
+}
+/* On a touch screen, "hover" sticks to the last thing tapped. Nothing should stay lifted or shifted because of it. */
+@media (hover: none) {
+  .chip:hover,
+  .job-part:hover,
+  .kid:hover,
+  .peek:hover,
+  a.tool:hover,
+  .back:hover,
+  .jc-card:hover,
+  .ee-thing:hover:not(:disabled),
+  .bp-item:hover,
+  .fp-bar:hover {
+    transform: none;
+  }
+  .kid:hover .kid-go {
+    transform: none;
+  }
+  .kbtn:hover:not(:disabled) {
+    filter: none;
   }
 }
 

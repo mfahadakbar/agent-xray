@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRunner } from '../lib/hooks';
-import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, Pic, Scene, StepTags, Tag, tagsFor, type P2 } from './kit';
+import { Arrow, At, Btn, Bubble, Card, Choice, Draw, MiniRay, Note, Pic, Scene, StepTags, Tag, tagsFor, usePortrait, type P2 } from './kit';
 import { register, type SceneProps } from './registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -134,12 +134,28 @@ const RECIPES: Record<Pat, Recipe> = {
 /** Half the width and height of a step box, in stage units. Arrows start and end at the box edge. */
 const HW = 7.750;
 const HH = 4.800;
+/** The same on the tall (phone) stage, where the boxes are bigger. */
+const HW_TALL = 14.800;
+const HH_TALL = 9.200;
 
-function edgeGeom(a: P2, b: P2, bend = 0): { from: P2; to: P2; bend: number; label: P2 } {
+/**
+ * A recipe is drawn left to right. On the tall (phone) stage it turns to run top to bottom:
+ * what was "further right" is "further down", and what was "above" is "to the left".
+ */
+const turn = (p: P2): P2 => [50 + (p[1] - 28) * 1.760, 20 + ((p[0] - 13) / 73) * 90];
+
+function edgeGeom(a: P2, b: P2, bend = 0, tall = false): { from: P2; to: P2; bend: number; label: P2 } {
   let from: P2;
   let to: P2;
-  let k = bend;
-  if (b[0] < a[0] - 1) {
+  let k = tall ? -bend * 1.500 : bend;
+  const hw = tall ? HW_TALL : HW;
+  const hh = tall ? HH_TALL : HH;
+  if (tall && b[1] < a[1] - 1) {
+    // A step that goes back up: leave from the right side, curve around on the right.
+    from = [a[0] + hw + 0.8, a[1] - 3];
+    to = [b[0] + hw + 0.8, b[1] + 3];
+    k = Math.abs(bend || 6) * 1.300;
+  } else if (!tall && b[0] < a[0] - 1) {
     // A step that goes back: leave from the bottom, curve underneath.
     from = [a[0] - 3, a[1] + HH + 0.8];
     to = [b[0] + 3, b[1] + HH + 0.8];
@@ -150,7 +166,7 @@ function edgeGeom(a: P2, b: P2, bend = 0): { from: P2; to: P2; bend: number; lab
     const len = Math.hypot(dx, dy) || 1;
     const ux = dx / len;
     const uy = dy / len;
-    const t = Math.min(HW / Math.max(Math.abs(ux), 0.001), HH / Math.max(Math.abs(uy), 0.001)) + 0.8;
+    const t = Math.min(hw / Math.max(Math.abs(ux), 0.001), hh / Math.max(Math.abs(uy), 0.001)) + 0.8;
     from = [a[0] + ux * t, a[1] + uy * t];
     to = [b[0] - ux * t, b[1] - uy * t];
   }
@@ -161,7 +177,8 @@ function edgeGeom(a: P2, b: P2, bend = 0): { from: P2; to: P2; bend: number; lab
   const cy = (from[1] + to[1]) / 2 + (dx / len) * k;
   const mx = 0.25 * from[0] + 0.5 * cx + 0.25 * to[0];
   const my = 0.25 * from[1] + 0.5 * cy + 0.25 * to[1];
-  return { from, to, bend: k, label: [mx, k ? my + 2.300 : my - 1.100] };
+  // The word on an arrow: under a curve or above a straight line when wide; beside it when tall.
+  return { from, to, bend: k, label: tall ? [mx + (k > 0 ? 3 : -3), my + 1] : [mx, k ? my + 2.300 : my - 1.100] };
 }
 
 function RecipeScene({ variant }: SceneProps) {
@@ -193,7 +210,10 @@ function RecipeScene({ variant }: SceneProps) {
       }
     });
 
+  const tall = usePortrait();
   const node = (id: string) => r.nodes.find((n) => n.id === id)!;
+  /** Where a step box sits on the stage, whichever way the stage stands. */
+  const spot = (id: string): P2 => (tall ? turn(node(id).at) : node(id).at);
   const lit = (e: Edge) => {
     for (let i = 1; i <= Math.min(stop, stops.length - 1); i++) if (stops[i - 1].includes(e.from) && stops[i].includes(e.to)) return true;
     return false;
@@ -227,15 +247,15 @@ function RecipeScene({ variant }: SceneProps) {
     >
       <Draw>
         {r.edges.map((e, i) => {
-          const g = edgeGeom(node(e.from).at, node(e.to).at, e.bend);
+          const g = edgeGeom(spot(e.from), spot(e.to), e.bend, tall);
           const on = lit(e);
           return (
             <g key={`${pat}${i}`}>
-              <Arrow from={g.from} to={g.to} bend={g.bend} off={!on} flow={on && busy} />
+              <Arrow from={g.from} to={g.to} bend={g.bend} p={g} off={!on} flow={on && busy} />
               {e.label && (
-                <text x={g.label[0]} y={g.label[1]} textAnchor="middle" fontSize="1.600" opacity={on ? 1 : 0.55}>
+                <Note at={g.label} p={g.label} anchor={tall ? (g.bend > 0 ? 'start' : 'end') : 'middle'} opacity={on ? 1 : 0.55}>
                   {e.label}
-                </text>
+                </Note>
               )}
             </g>
           );
@@ -243,7 +263,7 @@ function RecipeScene({ variant }: SceneProps) {
       </Draw>
 
       {r.nodes.map((n) => (
-        <At key={`${pat}${n.id}`} x={n.at[0]} y={n.at[1]} w={15.500}>
+        <At key={`${pat}${n.id}`} x={spot(n.id)[0]} y={spot(n.id)[1]} w={15.500} p={{ y: spot(n.id)[1], w: 28 }}>
           <Card className={`k-center rc-node${here.includes(n.id) ? ' is-on' : seen.has(n.id) ? ' is-done' : ''}`}>
             <StepTags tags={tagsFor(stops, n.id, stop)} current={ended ? undefined : stop + 1} />
             <Pic size={1.800}>{n.icon}</Pic>
@@ -252,11 +272,11 @@ function RecipeScene({ variant }: SceneProps) {
         </At>
       ))}
       {here.map((id) => (
-        <At key={`${pat}${id}tok`} x={node(id).at[0] + 6} y={node(id).at[1] - 5.500} z={3}>
+        <At key={`${pat}${id}tok`} x={spot(id)[0] + 6} y={spot(id)[1] - 5.500} z={3} p={{ x: spot(id)[0] + 12, y: spot(id)[1] - 9.500 }}>
           <span className="lp-heart">⭐</span>
         </At>
       ))}
-      <At x={50} y={52} hide={pat !== 'loop' || stop < 0}>
+      <At x={50} y={52} hide={pat !== 'loop' || stop < 0} p={{ x: 17, y: 88 }}>
         <Tag tone={ended ? 'ok' : 'info'}>try {Math.max(1, tries)} of 2</Tag>
       </At>
     </Scene>
@@ -381,21 +401,33 @@ function Team({ variant }: SceneProps) {
     >
       <Draw>
         {mode === 'handoff'
-          ? [0, 1].map((k) => <Arrow key={k} from={[CREW[k].at[0] + 7, 39]} to={[CREW[k + 1].at[0] - 7, 39]} bend={-3} off={i < k + 1} flow={i === k + 1} />)
+          ? [0, 1].map((k) => (
+              <Arrow key={k} from={[CREW[k].at[0] + 7, 39]} to={[CREW[k + 1].at[0] - 7, 39]} bend={-3} p={{ from: [CREW[k].at[0] + 9, 71], to: [CREW[k + 1].at[0] - 9, 71], bend: -4 }} off={i < k + 1} flow={i === k + 1} />
+            ))
           : CREW.map((m) => {
               const on = !!step?.on.includes(m.id);
               const talked = !!step?.say?.[m.id];
-              return <Arrow key={m.id} from={[50 + (m.at[0] - 50) * 0.16, 21]} to={[m.at[0] + (50 - m.at[0]) * 0.1, 31.500]} off={!on && !talked} flow={on} dashed={!on} />;
+              return (
+                <Arrow
+                  key={m.id}
+                  from={[50 + (m.at[0] - 50) * 0.16, 21]}
+                  to={[m.at[0] + (50 - m.at[0]) * 0.1, 31.500]}
+                  p={{ from: [50 + (m.at[0] - 50) * 0.16, 46], to: [m.at[0] + (50 - m.at[0]) * 0.1, 62] }}
+                  off={!on && !talked}
+                  flow={on}
+                  dashed={!on}
+                />
+              );
             })}
       </Draw>
 
-      <At x={22} y={6.500} w={38}>
+      <At x={22} y={6.500} w={38} p={{ x: 38, y: 8, w: 68 }}>
         <Bubble who="you" key={mode}>
           {t.ask}
         </Bubble>
       </At>
 
-      <At x={50} y={15} style={{ opacity: mode === 'handoff' ? 0.16 : 1 }}>
+      <At x={50} y={15} p={{ y: 35 }} style={{ opacity: mode === 'handoff' ? 0.16 : 1 }}>
         <div className={`tm-member${step?.on.includes('L') ? ' is-on' : ''}`}>
           <StepTags tags={tagsFor(groups, 'L', i)} current={i + 1} />
           <span className="tm-crown">👑</span>
@@ -405,7 +437,7 @@ function Team({ variant }: SceneProps) {
       </At>
 
       {CREW.map((m) => (
-        <At key={m.id} x={m.at[0]} y={m.at[1]}>
+        <At key={m.id} x={m.at[0]} y={m.at[1]} p={{ y: m.at[1] + 35 }}>
           <div className={`tm-member${step?.on.includes(m.id) ? ' is-on' : ''}${mode === 'route' && step && !step.say?.[m.id] && !step.on.includes(m.id) && i > 0 ? ' is-idle' : ''}`}>
             <StepTags tags={tagsFor(groups, m.id, i)} current={i + 1} />
             <MiniRay size={3.200} color={m.color} mood={step?.on.includes(m.id) ? 'think' : 'happy'} label={m.name} />
@@ -414,18 +446,18 @@ function Team({ variant }: SceneProps) {
         </At>
       ))}
       {CREW.map((m) => (
-        <At key={`${m.id}say`} x={m.at[0]} y={m.at[1] + 10.500} hide={!step?.say?.[m.id]}>
+        <At key={`${m.id}say`} x={m.at[0]} y={m.at[1] + 10.500} hide={!step?.say?.[m.id]} className="tm-say" p={{ y: m.at[1] + 51, w: 31 }}>
           <Tag tone="ok">{step?.say?.[m.id] ?? '…'}</Tag>
         </At>
       ))}
 
-      <At x={82} y={11} w={32} hide={!step?.final}>
+      <At x={82} y={11} w={32} hide={!step?.final} p={{ x: 50, y: 119, w: 90 }}>
         <Bubble who="ray" tone="ok" key={`${mode}final`}>
           {step?.final}
         </Bubble>
       </At>
 
-      <At x={16} y={21} w={26} hide={mode !== 'tasks' || i < 0}>
+      <At x={16} y={21} w={26} hide={mode !== 'tasks' || i < 0} p={{ x: 17, y: 36, w: 31 }}>
         <Card className="tm-todo">
           <small>to-do list</small>
           {TODO.map((task, k) => (
@@ -436,7 +468,7 @@ function Team({ variant }: SceneProps) {
         </Card>
       </At>
 
-      <At x={90} y={3.800}>
+      <At x={90} y={3.800} p={{ x: 87, y: 8 }}>
         <Tag tone={(step?.calls ?? 0) > 3 ? 'warn' : 'info'}>brain calls: {step?.calls ?? 0}</Tag>
       </At>
     </Scene>
