@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "An interactive X-ray of an AI agent. Click a part. See inside. Learn what it does.",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

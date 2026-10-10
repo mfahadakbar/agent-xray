@@ -5,6 +5,7 @@ import { Ray, type RayMode } from '../ray/Ray';
 import { ANCHOR, pathLength, pointAt, route, type Pt, type Stop } from '../ray/geometry';
 import { OrganGlyph, OrganPaths } from '../ray/glyphs';
 import { useMedia, useReducedMotion } from '../lib/hooks';
+import { REPO } from '../lib/links';
 import { useVisited } from '../lib/progress';
 import { setXray, useXray } from '../lib/xray';
 import { buildFlow, SCENARIOS, SWITCHES, type Card, type Scenario, type Slot, type Switches, type Tone } from './flow';
@@ -800,6 +801,9 @@ export function Home({ onOpen }: { onOpen(id: OrganId): void }) {
 
       <p className="home-foot">
         {ALL.length} parts · {TOOL_COUNT} real tools · one map
+        <a className="home-star" href={REPO} target="_blank" rel="noopener noreferrer">
+          Free and open source · ⭐ Star it on GitHub
+        </a>
       </p>
     </main>
   );

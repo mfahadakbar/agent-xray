@@ -6,7 +6,33 @@ How does an AI agent really work? This is the X-ray. Click a part. See inside. L
 
 The idea is simple. Show an agent as one big picture, like a body with parts. Click a part and you go deeper. Keep clicking and you learn step by step.
 
+It is free and open source. If it helps you, give it a ⭐. That is how other people find it.
+
 ![The start page: how does an AI agent really work?](docs/meet-ray.jpg)
+
+## Why I built this
+
+I don't have a PhD. I'm not a researcher in maths or computer science.
+
+Yet I design, build and solve real-world problems with data science.
+
+How?
+
+One thing made the difference. I understood the bits and pieces of data science, and how to put them together. Once you know that, you start applying it to the problems around you. And you keep learning.
+
+Fast forward to today. LLMs and AI agents can do a lot of that work now. But I believe the core is still the same.
+
+If you know the bits and pieces of an AI agent, you can start solving problems with it. And you get better as you go.
+
+That is where I want to help.
+
+I built Agent Xray. It is an interactive X-ray of an AI agent. You click a part, like the brain, the memory, the tools or the guardrails. You see what it is and how it connects to the rest. All in plain and simple language.
+
+I designed and directed it, and built it with an AI coding agent.
+
+If you can help improve it, I would really appreciate it. Thank you!
+
+[Fahad Akbar](https://github.com/mfahadakbar)
 
 ## Open it
 
@@ -168,3 +194,13 @@ npm run deploy             # sends dist/ to the gh-pages branch
 - Made for a modern browser, on a desktop or a phone. Tested in Chrome on a desktop and on an iPhone. Firefox is not tested yet.
 - It respects the "reduce motion" setting.
 - Nothing is sent anywhere. Progress is kept in the browser only.
+
+## Help improve it
+
+Found a mistake, a dead link or a tool that is missing? Open an [issue](https://github.com/mfahadakbar/agent-xray/issues) or send a pull request. The knowledge is plain text in `src/data/`, so most fixes need no code.
+
+## License
+
+[MIT](LICENSE). Free to use, change and share.
+
+The fonts built into the page (Fredoka, Nunito and JetBrains Mono) come with their own license, the SIL Open Font License.

@@ -82,7 +82,7 @@ function NextWord() {
           ))}
           {words.map((w, i) => (
             <span key={i} className="nw-word is-new k-pop">
-              <StepTag n={i + 1} corner small now={i === words.length - 1 && !done} />
+              <StepTag n={i + 1} small now={i === words.length - 1 && !done} />
               {w}
               {done && i === words.length - 1 ? '.' : ''}
             </span>

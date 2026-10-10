@@ -833,17 +833,26 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 0.3em 0.34em;
-  font: 600 1.600em/1.1 var(--display);
+  gap: 0.3em 0.26em;
+  /* sized so that the whole sentence, with a number on each guessed word, fits one line of the wide stage */
+  font: 600 1.450em/1.1 var(--display);
 }
 .nw-word {
   position: relative;
-  padding: 0.1em 0.28em;
+  padding: 0.1em 0.2em;
   border-radius: 0.35em;
 }
 .nw-word.is-new {
+  /* the number of the guess sits in front of the word, inside its box, so it never covers a letter */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  padding: 0.1em 0.26em 0.1em 0.16em;
   background: color-mix(in srgb, var(--c) 24%, transparent);
   color: var(--c);
+}
+.nw-word .k-step.is-now {
+  box-shadow: 0 0 0 0.15em #06101f;
 }
 .nw-slot {
   min-width: 2.4em;
@@ -2795,9 +2804,10 @@ button.bk-block:hover {
   font-size: 14px;
 }
 
-/* next word: a line of words may wrap, and the numbered tags need air between the lines */
+/* next word: on the tall stage the sentence wraps anyway (up to three lines when the long shots win), so it stays big */
 .scene.is-portrait .nw-sentence {
-  row-gap: 0.8em;
+  font-size: 1.6em;
+  row-gap: 0.45em;
 }
 .scene.is-portrait .nw-row {
   grid-template-columns: 6em 1fr 3em;

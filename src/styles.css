@@ -232,6 +232,15 @@ a {
   transform: translateX(16px);
   background: #06101f;
 }
+/* the way to the code: Agent Xray is free and open source, and a star helps other people find it */
+.top-star {
+  border-color: rgba(255, 215, 94, 0.42);
+  color: var(--ink);
+}
+.top-star:hover {
+  border-color: #ffd75e;
+  background: rgba(255, 215, 94, 0.14);
+}
 .seen {
   display: inline-flex;
   align-items: center;
@@ -1454,11 +1463,27 @@ a {
   color: var(--muted);
 }
 .home-foot {
-  font: 500 12.500px var(--display);
+  /* a line height in numbers: the star is drawn in another font, and must not make the line taller */
+  font: 500 12.500px/1.2 var(--display);
+  text-align: center;
   letter-spacing: 0.06em;
   color: var(--muted);
   opacity: 0.75;
   padding-top: 6px;
+}
+/* stays in one piece: on a narrow screen it drops to a line of its own */
+.home-star {
+  display: inline-block;
+  margin: 0 9px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: rgba(143, 190, 255, 0.4);
+  text-underline-offset: 4px;
+}
+.home-star:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
 }
 
 /* ── a room: one box of the map, opened ────────────────────────────────────── */
@@ -2238,6 +2263,13 @@ a.tool:hover .tool-go {
 
 /* ── smaller screens ───────────────────────────────────────────────────────── */
 
+/* Less room in the top bar: the star loses its words, so the path you took keeps its place. */
+@media (max-width: 1279px) {
+  .top-star .top-btn-label {
+    display: none;
+  }
+}
+
 @media (max-width: 1060px) {
   /* One column. The page reads: what it is called, try it, what it is, what is inside, the tools. */
   .room {
@@ -2383,6 +2415,10 @@ a.tool:hover .tool-go {
   }
   .home {
     padding-top: 0;
+  }
+  /* The start page fits one phone screen exactly. A second line under it would make it scroll, and the star is in the top bar. */
+  .home-skin .home-star {
+    display: none;
   }
   .deck {
     min-height: 0;
@@ -2662,10 +2698,12 @@ a.tool:hover .tool-go {
     padding: 0 12px;
     height: 40px;
   }
-  .top-xray .top-btn-label {
+  .top-xray .top-btn-label,
+  .top-star .top-btn-label {
     display: inline;
   }
-  .top-btn:not(.top-xray) .top-btn-label {
+  .top-star-where,
+  .top-btn:not(.top-xray, .top-star) .top-btn-label {
     display: none;
   }
   .home {
@@ -2689,6 +2727,12 @@ a.tool:hover .tool-go {
   }
   .atlas-head {
     padding: 14px 14px 12px;
+  }
+}
+/* a very small phone: the top bar has room for the star, but not for its word */
+@media (max-width: 350px) {
+  .top-star .top-btn-label {
+    display: none;
   }
 }
 

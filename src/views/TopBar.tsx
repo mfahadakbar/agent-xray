@@ -1,6 +1,7 @@
 import { Fragment, type CSSProperties } from 'react';
 import type { XNode } from '../data/types';
 import { ALL } from '../data/tree';
+import { REPO } from '../lib/links';
 import { navigate, toHash } from '../lib/route';
 import { useVisited } from '../lib/progress';
 import { setXray, useXray } from '../lib/xray';
@@ -89,6 +90,13 @@ export function TopBar({ chain, path, onMap }: { chain: XNode[]; path: string[];
           <span aria-hidden="true">🗺️</span>
           <span className="top-btn-label">Whole map</span>
         </button>
+        {/* Agent Xray is free and open source. This is the way to the code, and to giving it a star. */}
+        <a className="top-btn top-star" href={REPO} target="_blank" rel="noopener noreferrer" aria-label="Star Agent Xray on GitHub" title="Free and open source. Give it a star on GitHub">
+          <span aria-hidden="true">⭐</span>
+          <span className="top-btn-label">
+            Star<span className="top-star-where"> on GitHub</span>
+          </span>
+        </a>
       </div>
     </header>
   );
